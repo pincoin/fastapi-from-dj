@@ -6,3 +6,5 @@ pydantic==1.9.1
 python-dotenv==0.20.0
 SQLAlchemy==1.4.37
 uvicorn==0.17.6
+
+# black: mypy-extensions, tomli, platformdirs, pathspec

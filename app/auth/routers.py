@@ -1,11 +1,12 @@
-from math import perm
 from conf.config import get_settings
 from conf.dependencies import engine_begin, engine_connect
+from conf.exceptions import item_not_found_exception
+from conf.responses import successful_response
 from fastapi import APIRouter, Depends
-from sqlalchemy.engine import CursorResult
+from sqlalchemy.engine import CursorResult, Row
 from sqlalchemy.ext.asyncio.engine import AsyncConnection
 
-from . import exceptions, models
+from . import models
 
 settings = get_settings()
 
@@ -49,12 +50,10 @@ async def get_user(
         models.users.select().where(models.users.c.id == user_id)
     )
 
-    user = cr.first()
-
-    if user:
+    if user := cr.first():
         return user
 
-    raise exceptions.user_not_found_exception()
+    raise item_not_found_exception("User")
 
 
 @router.post("/users/")
@@ -68,13 +67,19 @@ async def update_user(conn: AsyncConnection = Depends(engine_begin)):
 
 
 @router.delete("/users/{user_id}")
-async def delete_user(conn: AsyncConnection = Depends(engine_begin)):
-    return {}
+async def delete_user(
+    user_id: int,
+    conn: AsyncConnection = Depends(engine_begin),
+):
+    cr: CursorResult = await conn.execute(
+        models.users.select().where(models.users.c.id == user_id)
+    )
 
+    if user := cr.first():
+        await conn.execute(models.users.delete().where(models.users.c.id == user_id))
+        return successful_response(200)
 
-@router.put("/users/{user_id}/password")
-async def change_password_of_user(conn: AsyncConnection = Depends(engine_begin)):
-    return {}
+    raise item_not_found_exception("User")
 
 
 @router.get("/users/{user_id}/groups")
@@ -105,15 +110,16 @@ async def get_content_type(
     conn: AsyncConnection = Depends(engine_connect),
 ):
     cr: CursorResult = await conn.execute(
-        models.content_types.select().where(models.content_types.c.id == content_type_id)
+        models.content_types.select().where(
+            models.content_types.c.id == content_type_id
+        )
     )
 
-    content_type = cr.first()
-
-    if content_type:
+    if content_type := cr.first():
         return content_type
 
-    raise exceptions.content_type_not_found_exception()
+    raise item_not_found_exception("Content Type")
+
 
 @router.post("/content-types/")
 async def create_content_type(conn: AsyncConnection = Depends(engine_begin)):
@@ -126,8 +132,25 @@ async def update_content_type(conn: AsyncConnection = Depends(engine_begin)):
 
 
 @router.delete("/content-types/{content_type_id}")
-async def delete_content_type(conn: AsyncConnection = Depends(engine_begin)):
-    return {}
+async def delete_content_type(
+    content_type_id: int,
+    conn: AsyncConnection = Depends(engine_begin),
+):
+    cr: CursorResult = await conn.execute(
+        models.content_types.select().where(
+            models.content_types.c.id == content_type_id
+        )
+    )
+
+    if content_type := cr.first():
+        await conn.execute(
+            models.content_types.delete().where(
+                models.content_types.c.id == content_type_id
+            )
+        )
+        return successful_response(200)
+
+    raise item_not_found_exception("Content Type")
 
 
 @router.get("/content-types/{content_type_id}/permissions")
@@ -148,6 +171,7 @@ async def list_groups(
     )
     return cr.fetchall()
 
+
 @router.get("/groups/{group_id}")
 async def get_group(
     group_id: int,
@@ -157,12 +181,10 @@ async def get_group(
         models.groups.select().where(models.groups.c.id == group_id)
     )
 
-    group = cr.first()
-
-    if group:
+    if group := cr.first():
         return group
 
-    raise exceptions.content_type_not_found_exception()
+    raise item_not_found_exception("Group")
 
 
 @router.post("/groups/")
@@ -176,8 +198,19 @@ async def update_group(conn: AsyncConnection = Depends(engine_begin)):
 
 
 @router.delete("/groups/{group_id}")
-async def delete_group(conn: AsyncConnection = Depends(engine_begin)):
-    return {}
+async def delete_group(
+    group_id: int,
+    conn: AsyncConnection = Depends(engine_begin),
+):
+    cr: CursorResult = await conn.execute(
+        models.groups.select().where(models.groups.c.id == group_id)
+    )
+
+    if group := cr.first():
+        await conn.execute(models.groups.delete().where(models.groups.c.id == group_id))
+        return successful_response(200)
+
+    raise item_not_found_exception("Group")
 
 
 @router.get("/groups/{group_id}/users")
@@ -196,7 +229,8 @@ async def delete_user_of_group(conn: AsyncConnection = Depends(engine_connect)):
 
 
 @router.get("/permissions")
-async def list_permissions(skip: int = 0,
+async def list_permissions(
+    skip: int = 0,
     take: int = 100,
     conn: AsyncConnection = Depends(engine_connect),
 ):
@@ -215,13 +249,10 @@ async def get_permission(
         models.permissions.select().where(models.permissions.c.id == permission_id)
     )
 
-    permission = cr.first()
-
-    if permission:
+    if permission := cr.first():
         return permission
 
-    raise exceptions.permission_not_found_exception()
-
+    raise item_not_found_exception("Permission")
 
 
 @router.post("/permissions/")
@@ -277,24 +308,15 @@ async def list_content_types_of_permission(
 
 
 @router.get("/superusers")
-async def list_superusers(skip: int = 0,
+async def list_superusers(
+    skip: int = 0,
     take: int = 100,
     conn: AsyncConnection = Depends(engine_connect),
 ):
     cr: CursorResult = await conn.execute(
-        models.users.select().where(models.users.c.is_superuser==True) \
-            .offset(skip)\
-            .limit(take)
+        models.users.select()
+        .where(models.users.c.is_superuser == True)
+        .offset(skip)
+        .limit(take)
     )
     return cr.fetchall()
-
-
-
-@router.post("/superusers")
-async def create_superuser(conn: AsyncConnection = Depends(engine_connect)):
-    return {}
-
-
-@router.delete("/superusers/{user_id}")
-async def delete_superuser(conn: AsyncConnection = Depends(engine_connect)):
-    return {}
