@@ -3,20 +3,31 @@ from datetime import datetime
 from pydantic import BaseModel, EmailStr, Field
 
 
-class UserBase(BaseModel):
-    is_superuser: bool = False
+class UserCreate(BaseModel):
     username: str = Field(max_length=150)
     first_name: str = Field(max_length=150)
     last_name: str = Field(max_length=150)
     email: EmailStr
-    is_staff: bool = False
-    is_active: bool = True
+    password: str = Field(max_length=128)
 
 
-class UserOut(UserBase):
+class UserUpdate(BaseModel):
+    first_name: str | None = Field(max_length=150)
+    last_name: str | None = Field(max_length=150)
+    email: EmailStr | None = None
+    password: str | None = Field(max_length=128)
+    is_active: bool | None = True
+    is_staff: bool | None = False
+    is_superuser: bool | None = False
+
+
+class UserResponse(BaseModel):
+    username: str
+    first_name: str
+    last_name: str
+    email: EmailStr
+    is_active: bool | None = False
+    is_staff: bool | None = False
+    is_superuser: bool | None = False
     last_login: datetime | None = None
     date_joined: datetime
-
-
-class UserIn(UserBase):
-    password: str = Field(max_length=128)

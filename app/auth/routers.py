@@ -62,34 +62,48 @@ async def get_user(
 @router.post(
     "/users/",
     status_code=status.HTTP_201_CREATED,
-    response_model=schemas.UserOut,
+    response_model=schemas.UserResponse,
 )
 async def create_user(
-    user: schemas.UserIn,
+    user: schemas.UserCreate,
     conn: AsyncConnection = Depends(engine_begin),
 ):
-
     salt = Pbkdf2Sha256Hasher.salt()
     hash = Pbkdf2Sha256Hasher.hasher(user.password, salt)
     hashed_password = Pbkdf2Sha256Hasher.encode(hash, salt)
 
+    is_active = True
+    is_staff = False
+    is_superuser = False
+
     date_joined = datetime.now()
+    last_login = None
+
+    print(dir(user))
 
     await conn.execute(
         models.users.insert().values(
             password=hashed_password,
-            is_superuser=user.is_superuser,
+            is_superuser=is_superuser,
             username=user.username,
             first_name=user.first_name,
             last_name=user.last_name,
             email=user.email,
-            is_staff=user.is_staff,
-            is_active=user.is_active,
+            is_staff=is_staff,
+            is_active=is_active,
             date_joined=date_joined,
+            last_login=last_login,
         )
     )
 
-    return schemas.UserOut(**user.dict(), date_joined=date_joined)
+    return schemas.UserResponse(
+        **user.dict(),
+        date_joined=date_joined,
+        is_active=is_active,
+        is_staff=is_staff,
+        is_superuser=is_superuser,
+        last_login=last_login,
+    )
 
 
 @router.put("/users/{user_id}")
