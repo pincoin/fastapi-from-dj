@@ -15,6 +15,7 @@ This project is based on SQLAlchemy 1.4+ in order to utilize async connections.
 * SQLAlchemy[asyncio]
 * asyncpg
 * pydantic[dotenv]
+* pydantic[email]
 * uvicorn
 * alembic
 * uvicorn
@@ -43,33 +44,14 @@ SQLAlchemy 2.0 migration must be considered for consistent development, so you m
 $ SQLALCHEMY_WARN_20=1 python -W always::DeprecationWarning app/main.py
 ```
 
-# Package structure
-```
-package/
-  __init__.py
-  routers.py
-  models.py
-  schemas.py
-  responses.py
-  exceptions.py
-  utils.py
-```
-
-* `routers.py`: API routers for controllers
-* `models.py`: Database tables, relations, and views
-* `schemas.py`: API schemas, forms includes validators
-* `responses.py`: Reusable HTTP responses
-* `exceptions.py`: Reusable HTTP exceptions
-* `utils.py`: Helpers
-
-
 # Django or FastAPI
-I decided to run Django and FastAPI servers because of the following reasons.
+I decided to run Django and FastAPI servers because of the following reasons:
 
 ## Django
 Pros
 * All-in-one framework with a rich of 3rd party libraries in django-ecosystem
 * Django ORM and Admin page
+
 Cons
 * REST API is supported by DRF(Django Rest Framework)
 * WSGI
@@ -79,6 +61,7 @@ Cons
 Pros
 * Async/ASGI
 * Websocket
+
 Cons
 * Session not supported
 * Samll communities with small 3rd party libraries

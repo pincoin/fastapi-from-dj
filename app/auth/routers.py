@@ -1,12 +1,15 @@
+from datetime import datetime
+
 from conf.config import get_settings
 from conf.dependencies import engine_begin, engine_connect
 from conf.exceptions import item_not_found_exception
 from conf.responses import successful_response
-from fastapi import APIRouter, Depends
-from sqlalchemy.engine import CursorResult, Row
+from fastapi import APIRouter, Depends, status
+from sqlalchemy.engine import CursorResult
 from sqlalchemy.ext.asyncio.engine import AsyncConnection
 
-from . import models
+from . import models, schemas
+from .utils import Pbkdf2Sha256Hasher
 
 settings = get_settings()
 
@@ -56,9 +59,37 @@ async def get_user(
     raise item_not_found_exception("User")
 
 
-@router.post("/users/")
-async def create_user(conn: AsyncConnection = Depends(engine_begin)):
-    return {}
+@router.post(
+    "/users/",
+    status_code=status.HTTP_201_CREATED,
+    response_model=schemas.UserOut,
+)
+async def create_user(
+    user: schemas.UserIn,
+    conn: AsyncConnection = Depends(engine_begin),
+):
+
+    salt = Pbkdf2Sha256Hasher.salt()
+    hash = Pbkdf2Sha256Hasher.hasher(user.password, salt)
+    hashed_password = Pbkdf2Sha256Hasher.encode(hash, salt)
+
+    date_joined = datetime.now()
+
+    await conn.execute(
+        models.users.insert().values(
+            password=hashed_password,
+            is_superuser=user.is_superuser,
+            username=user.username,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            email=user.email,
+            is_staff=user.is_staff,
+            is_active=user.is_active,
+            date_joined=date_joined,
+        )
+    )
+
+    return schemas.UserOut(**user.dict(), date_joined=date_joined)
 
 
 @router.put("/users/{user_id}")
