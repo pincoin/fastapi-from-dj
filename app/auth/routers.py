@@ -1,9 +1,10 @@
 from datetime import datetime, timezone
+
 from conf.config import get_settings
 from conf.dependencies import engine_begin, engine_connect
 from conf.exceptions import item_not_found_exception
 from conf.responses import successful_response
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, Response
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.engine import CursorResult
 from sqlalchemy.ext.asyncio.engine import AsyncConnection
@@ -136,9 +137,6 @@ async def update_user(
     if not user_row:
         raise item_not_found_exception("User")
 
-    # 4. Pydantic 모델 <= 사용자 입력 dict (업데이트=copy)
-    # 5. Pydantic 모델 json 인코딩
-
     # 2. Create pydantic model instance from fetched row dict
     user_model = schemas.User(**user_row._mapping)
 
@@ -149,9 +147,6 @@ async def update_user(
     user_model_new = user_model.copy(update=user_dict)
 
     # 5. Update query
-    print(user_model_new)
-    print(user_model_new.dict())
-
     await conn.execute(
         models.users.update()
         .where(models.users.c.id == user_id)
@@ -162,7 +157,11 @@ async def update_user(
     return jsonable_encoder(user_model_new)
 
 
-@router.delete("/users/{user_id}")
+@router.delete(
+    "/users/{user_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_class=Response,
+)
 async def delete_user(
     user_id: int,
     conn: AsyncConnection = Depends(engine_begin),
@@ -173,7 +172,7 @@ async def delete_user(
 
     if user_row := cr.first():
         await conn.execute(models.users.delete().where(models.users.c.id == user_id))
-        return successful_response(200)
+        return None
 
     raise item_not_found_exception("User")
 
