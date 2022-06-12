@@ -4,7 +4,7 @@ from conf.config import get_settings
 from conf.dependencies import engine_begin, engine_connect
 from conf.exceptions import item_not_found_exception
 from conf.responses import successful_response
-from fastapi import APIRouter, Depends, status, Response
+from fastapi import APIRouter, Depends, Response, status
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.engine import CursorResult
 from sqlalchemy.ext.asyncio.engine import AsyncConnection
@@ -250,19 +250,28 @@ async def list_permissions_of_content_type(
     return {}
 
 
-@router.get("/groups")
+@router.get(
+    "/groups",
+    status_code=status.HTTP_200_OK,
+    response_model=list[schemas.Group],
+)
 async def list_groups(
     skip: int = 0,
     take: int = 100,
     conn: AsyncConnection = Depends(engine_connect),
 ):
-    cr: CursorResult = await conn.execute(
-        models.groups.select().offset(skip).limit(take)
-    )
+    query = models.groups.select().offset(skip).limit(take)
+
+    cr: CursorResult = await conn.execute(query)
+
     return cr.fetchall()
 
 
-@router.get("/groups/{group_id}")
+@router.get(
+    "/groups/{group_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=schemas.Group,
+)
 async def get_group(
     group_id: int,
     conn: AsyncConnection = Depends(engine_connect),
@@ -277,9 +286,19 @@ async def get_group(
     raise item_not_found_exception("Group")
 
 
-@router.post("/groups/")
-async def create_group(conn: AsyncConnection = Depends(engine_begin)):
-    return {}
+@router.post(
+    "/groups/",
+    status_code=status.HTTP_201_CREATED,
+    response_model=schemas.Group,
+)
+async def create_group(
+    group: schemas.Group,
+    conn: AsyncConnection = Depends(engine_begin),
+):
+
+    await conn.execute(models.users.insert().values(**group.dict()))
+
+    return schemas.User(**group.dict())
 
 
 @router.put("/groups/{group_id}")

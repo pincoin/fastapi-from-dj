@@ -33,3 +33,8 @@ class User(BaseModel):
     is_superuser: bool | None = False
     last_login: datetime | None = None
     date_joined: datetime
+
+
+class Group(BaseModel):
+    id: int | None
+    name: str = Field(max_length=150)
