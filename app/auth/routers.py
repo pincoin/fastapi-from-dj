@@ -3,8 +3,7 @@ from datetime import datetime, timezone
 from conf.config import get_settings
 from conf.dependencies import engine_begin, engine_connect
 from conf.exceptions import item_not_found_exception
-from conf.responses import successful_response
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.engine import CursorResult
 from sqlalchemy.ext.asyncio.engine import AsyncConnection
@@ -122,21 +121,23 @@ async def update_user(
     user: schemas.UserUpdate,
     conn: AsyncConnection = Depends(engine_begin),
 ):
+    # 1. Create user input dict from user input json (excludes fields unset)
+    user_dict = user.dict(exclude_unset=True)
+
+    if not user_dict:
+        raise HTTPException(status_code=400, detail=f"Bad request")
+
+    # 2. Fetch saved row from database
     cr: CursorResult = await conn.execute(
         models.users.select().where(models.users.c.id == user_id)
     )
-
-    # 1. Fetch saved row from database
     user_row = cr.first()
 
     if not user_row:
         raise item_not_found_exception("User")
 
-    # 2. Create pydantic model instance from fetched row dict
+    # 3. Create pydantic model instance from fetched row dict
     user_model = schemas.User(**user_row._mapping)
-
-    # 3. Create user input dict from user input json (excludes fields unset)
-    user_dict = user.dict(exclude_unset=True)
 
     # 4. Create NEW pydantic model from user_model + user_dict
     user_model_new = user_model.copy(update=user_dict)
@@ -252,23 +253,25 @@ async def update_content_type(
     content_type: schemas.ContentTypeUpdate,
     conn: AsyncConnection = Depends(engine_begin),
 ):
+    # 1. Create user input dict from user input json (excludes fields unset)
+    content_type_dict = content_type.dict(exclude_unset=True)
+
+    if not content_type_dict:
+        raise HTTPException(status_code=400, detail=f"Bad request")
+
+    # 2. Fetch saved row from database
     cr: CursorResult = await conn.execute(
         models.content_types.select().where(
             models.content_types.c.id == content_type_id
         )
     )
-
-    # 1. Fetch saved row from database
     content_type_row = cr.first()
 
     if not content_type_row:
         raise item_not_found_exception("Content Type")
 
-    # 2. Create pydantic model instance from fetched row dict
+    # 3. Create pydantic model instance from fetched row dict
     content_type_model = schemas.ContentType(**content_type_row._mapping)
-
-    # 3. Create user input dict from user input json (excludes fields unset)
-    content_type_dict = content_type.dict(exclude_unset=True)
 
     # 4. Create NEW pydantic model from user_model + user_dict
     content_type_model_new = content_type_model.copy(update=content_type_dict)
@@ -376,21 +379,23 @@ async def update_group(
     group: schemas.GroupUpdate,
     conn: AsyncConnection = Depends(engine_begin),
 ):
+    # 1. Create user input dict from user input json (excludes fields unset)
+    group_dict = group.dict(exclude_unset=True)
+
+    if not group_dict:
+        raise HTTPException(status_code=400, detail=f"Bad request")
+
+    # 2. Fetch saved row from database
     cr: CursorResult = await conn.execute(
         models.groups.select().where(models.groups.c.id == group_id)
     )
-
-    # 1. Fetch saved row from database
     group_row = cr.first()
 
     if not group_row:
         raise item_not_found_exception("Group")
 
-    # 2. Create pydantic model instance from fetched row dict
+    # 3. Create pydantic model instance from fetched row dict
     group_model = schemas.Group(**group_row._mapping)
-
-    # 3. Create user input dict from user input json (excludes fields unset)
-    group_dict = group.dict(exclude_unset=True)
 
     # 4. Create NEW pydantic model from user_model + user_dict
     group_model_new = group_model.copy(update=group_dict)
