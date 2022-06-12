@@ -6,4 +6,8 @@ def item_not_found_exception(item):
 
 
 def bad_request_exception():
-    HTTPException(status_code=400, detail="Bad request")
+    return HTTPException(status_code=400, detail="Bad request")
+
+
+def conflict_exception():
+    return HTTPException(status_code=409, detail="Integrity conflict")

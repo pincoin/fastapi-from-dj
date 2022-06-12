@@ -1,8 +1,13 @@
 from datetime import datetime, timezone
 
+import sqlalchemy
 from conf.config import get_settings
 from conf.dependencies import engine_begin, engine_connect
-from conf.exceptions import bad_request_exception, item_not_found_exception
+from conf.exceptions import (
+    bad_request_exception,
+    conflict_exception,
+    item_not_found_exception,
+)
 from fastapi import APIRouter, Depends, Response, status
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.engine import CursorResult
@@ -105,9 +110,11 @@ async def create_user(
         "last_login": None,
     }
 
-    await conn.execute(models.users.insert().values(**user_dict))
-
-    return schemas.User(**user_dict)
+    try:
+        await conn.execute(models.users.insert().values(**user_dict))
+        return schemas.User(**user_dict)
+    except sqlalchemy.exc.IntegrityError:
+        raise conflict_exception()
 
 
 @router.put(
@@ -142,15 +149,18 @@ async def update_user(
     # 4. Create NEW pydantic model from user_model + user_dict
     user_model_new = user_model.copy(update=user_dict)
 
-    # 5. Update query
-    await conn.execute(
-        models.users.update()
-        .where(models.users.c.id == user_id)
-        .values(**user_model_new.dict())
-    )
+    try:
+        # 5. Update query
+        await conn.execute(
+            models.users.update()
+            .where(models.users.c.id == user_id)
+            .values(**user_model_new.dict())
+        )
 
-    # 6. Encode pydantic model into JSON
-    return jsonable_encoder(user_model_new)
+        # 6. Encode pydantic model into JSON
+        return jsonable_encoder(user_model_new)
+    except sqlalchemy.exc.IntegrityError:
+        raise conflict_exception()
 
 
 @router.delete(
@@ -239,8 +249,11 @@ async def create_content_type(
     content_type: schemas.ContentTypeCreate,
     conn: AsyncConnection = Depends(engine_begin),
 ):
-    await conn.execute(models.content_types.insert().values(**content_type.dict()))
-    return schemas.ContentType(**content_type.dict())
+    try:
+        await conn.execute(models.content_types.insert().values(**content_type.dict()))
+        return schemas.ContentType(**content_type.dict())
+    except sqlalchemy.exc.IntegrityError:
+        raise conflict_exception()
 
 
 @router.put(
@@ -272,13 +285,15 @@ async def update_content_type(
 
     content_type_model_new = content_type_model.copy(update=content_type_dict)
 
-    await conn.execute(
-        models.content_types.update()
-        .where(models.content_types.c.id == content_type_id)
-        .values(**content_type_model_new.dict())
-    )
-
-    return jsonable_encoder(content_type_model_new)
+    try:
+        await conn.execute(
+            models.content_types.update()
+            .where(models.content_types.c.id == content_type_id)
+            .values(**content_type_model_new.dict())
+        )
+        return jsonable_encoder(content_type_model_new)
+    except sqlalchemy.exc.IntegrityError:
+        raise conflict_exception()
 
 
 @router.delete(
@@ -359,8 +374,11 @@ async def create_group(
     group: schemas.GroupCreate,
     conn: AsyncConnection = Depends(engine_begin),
 ):
-    await conn.execute(models.groups.insert().values(**group.dict()))
-    return schemas.Group(**group.dict())
+    try:
+        await conn.execute(models.groups.insert().values(**group.dict()))
+        return schemas.Group(**group.dict())
+    except sqlalchemy.exc.IntegrityError:
+        raise conflict_exception()
 
 
 @router.put(
@@ -390,13 +408,15 @@ async def update_group(
 
     group_model_new = group_model.copy(update=group_dict)
 
-    await conn.execute(
-        models.groups.update()
-        .where(models.groups.c.id == group_id)
-        .values(**group_model_new.dict())
-    )
-
-    return jsonable_encoder(group_model_new)
+    try:
+        await conn.execute(
+            models.groups.update()
+            .where(models.groups.c.id == group_id)
+            .values(**group_model_new.dict())
+        )
+        return jsonable_encoder(group_model_new)
+    except sqlalchemy.exc.IntegrityError:
+        raise conflict_exception()
 
 
 @router.delete(
