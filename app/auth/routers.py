@@ -253,13 +253,11 @@ async def update_content_type(
     content_type: schemas.ContentTypeUpdate,
     conn: AsyncConnection = Depends(engine_begin),
 ):
-    # 1. Create user input dict from user input json (excludes fields unset)
     content_type_dict = content_type.dict(exclude_unset=True)
 
     if not content_type_dict:
         raise HTTPException(status_code=400, detail=f"Bad request")
 
-    # 2. Fetch saved row from database
     cr: CursorResult = await conn.execute(
         models.content_types.select().where(
             models.content_types.c.id == content_type_id
@@ -270,20 +268,16 @@ async def update_content_type(
     if not content_type_row:
         raise item_not_found_exception("Content Type")
 
-    # 3. Create pydantic model instance from fetched row dict
     content_type_model = schemas.ContentType(**content_type_row._mapping)
 
-    # 4. Create NEW pydantic model from user_model + user_dict
     content_type_model_new = content_type_model.copy(update=content_type_dict)
 
-    # 5. Update query
     await conn.execute(
         models.content_types.update()
         .where(models.content_types.c.id == content_type_id)
         .values(**content_type_model_new.dict())
     )
 
-    # 6. Encode pydantic model into JSON
     return jsonable_encoder(content_type_model_new)
 
 
@@ -379,13 +373,11 @@ async def update_group(
     group: schemas.GroupUpdate,
     conn: AsyncConnection = Depends(engine_begin),
 ):
-    # 1. Create user input dict from user input json (excludes fields unset)
     group_dict = group.dict(exclude_unset=True)
 
     if not group_dict:
         raise HTTPException(status_code=400, detail=f"Bad request")
 
-    # 2. Fetch saved row from database
     cr: CursorResult = await conn.execute(
         models.groups.select().where(models.groups.c.id == group_id)
     )
@@ -394,20 +386,16 @@ async def update_group(
     if not group_row:
         raise item_not_found_exception("Group")
 
-    # 3. Create pydantic model instance from fetched row dict
     group_model = schemas.Group(**group_row._mapping)
 
-    # 4. Create NEW pydantic model from user_model + user_dict
     group_model_new = group_model.copy(update=group_dict)
 
-    # 5. Update query
     await conn.execute(
         models.groups.update()
         .where(models.groups.c.id == group_id)
         .values(**group_model_new.dict())
     )
 
-    # 6. Encode pydantic model into JSON
     return jsonable_encoder(group_model_new)
 
 
