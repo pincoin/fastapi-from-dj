@@ -2,8 +2,8 @@ from datetime import datetime, timezone
 
 from conf.config import get_settings
 from conf.dependencies import engine_begin, engine_connect
-from conf.exceptions import item_not_found_exception
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from conf.exceptions import bad_request_exception, item_not_found_exception
+from fastapi import APIRouter, Depends, Response, status
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.engine import CursorResult
 from sqlalchemy.ext.asyncio.engine import AsyncConnection
@@ -125,7 +125,7 @@ async def update_user(
     user_dict = user.dict(exclude_unset=True)
 
     if not user_dict:
-        raise HTTPException(status_code=400, detail=f"Bad request")
+        raise bad_request_exception()
 
     # 2. Fetch saved row from database
     cr: CursorResult = await conn.execute(
@@ -256,7 +256,7 @@ async def update_content_type(
     content_type_dict = content_type.dict(exclude_unset=True)
 
     if not content_type_dict:
-        raise HTTPException(status_code=400, detail=f"Bad request")
+        raise bad_request_exception()
 
     cr: CursorResult = await conn.execute(
         models.content_types.select().where(
@@ -376,7 +376,7 @@ async def update_group(
     group_dict = group.dict(exclude_unset=True)
 
     if not group_dict:
-        raise HTTPException(status_code=400, detail=f"Bad request")
+        raise bad_request_exception()
 
     cr: CursorResult = await conn.execute(
         models.groups.select().where(models.groups.c.id == group_id)
