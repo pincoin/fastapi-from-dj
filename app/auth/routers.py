@@ -8,7 +8,7 @@ from conf.exceptions import (
     conflict_exception,
     item_not_found_exception,
 )
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, Response, status, Query
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.engine import CursorResult
 from sqlalchemy.ext.asyncio.engine import AsyncConnection
@@ -44,11 +44,11 @@ async def logout():
     response_model_exclude={"password"},
 )
 async def list_users(
-    skip: int = 0,
-    take: int = 100,
-    is_active: bool = True,
-    is_staff: bool = False,
-    is_superuser: bool = False,
+    skip: int | None = Query(default=0, ge=0),
+    take: int | None = Query(default=100, le=100),
+    is_active: bool | None = True,
+    is_staff: bool | None = False,
+    is_superuser: bool | None = False,
     conn: AsyncConnection = Depends(engine_connect),
 ):
     query = models.users.select()
@@ -74,7 +74,7 @@ async def list_users(
     response_model_exclude={"password"},
 )
 async def get_user(
-    user_id: int,
+    user_id: int | None = Query(default=0, gt=0),
     conn: AsyncConnection = Depends(engine_connect),
 ):
     cr: CursorResult = await conn.execute(
@@ -124,8 +124,8 @@ async def create_user(
     response_model_exclude={"password"},
 )
 async def update_user(
-    user_id: int,
     user: schemas.UserUpdate,
+    user_id: int | None = Query(default=0, gt=0),
     conn: AsyncConnection = Depends(engine_begin),
 ):
     # 1. Create user input dict from user input json (excludes fields unset)
@@ -169,7 +169,7 @@ async def update_user(
     response_class=Response,
 )
 async def delete_user(
-    user_id: int,
+    user_id: int | None = Query(default=0, gt=0),
     conn: AsyncConnection = Depends(engine_begin),
 ):
     cr: CursorResult = await conn.execute(
@@ -199,10 +199,10 @@ async def list_permissions_of_user(conn: AsyncConnection = Depends(engine_connec
     response_model=list[schemas.ContentType],
 )
 async def list_content_types(
-    skip: int = 0,
-    take: int = 100,
-    app_label: str = None,
-    model: str = None,
+    skip: int | None = Query(default=0, ge=0),
+    take: int | None = Query(default=100, le=100),
+    app_label: str | None = Query(default=None, max_length=100),
+    model: str | None = Query(default=None, max_length=100),
     conn: AsyncConnection = Depends(engine_connect),
 ):
     query = models.content_types.select()
@@ -225,7 +225,7 @@ async def list_content_types(
     response_model=schemas.ContentType,
 )
 async def get_content_type(
-    content_type_id: int,
+    content_type_id: int | None = Query(default=0, gt=0),
     conn: AsyncConnection = Depends(engine_connect),
 ):
     cr: CursorResult = await conn.execute(
@@ -262,8 +262,8 @@ async def create_content_type(
     response_model=schemas.ContentType,
 )
 async def update_content_type(
-    content_type_id: int,
     content_type: schemas.ContentTypeUpdate,
+    content_type_id: int | None = Query(default=0, gt=0),
     conn: AsyncConnection = Depends(engine_begin),
 ):
     content_type_dict = content_type.dict(exclude_unset=True)
@@ -302,7 +302,7 @@ async def update_content_type(
     response_class=Response,
 )
 async def delete_content_type(
-    content_type_id: int,
+    content_type_id: int | None = Query(default=0, gt=0),
     conn: AsyncConnection = Depends(engine_begin),
 ):
     cr: CursorResult = await conn.execute(
@@ -335,8 +335,8 @@ async def list_permissions_of_content_type(
     response_model=list[schemas.Group],
 )
 async def list_groups(
-    skip: int = 0,
-    take: int = 100,
+    skip: int | None = Query(default=0, ge=0),
+    take: int | None = Query(default=100, le=100),
     conn: AsyncConnection = Depends(engine_connect),
 ):
     query = models.groups.select().offset(skip).limit(take)
@@ -352,7 +352,7 @@ async def list_groups(
     response_model=schemas.Group,
 )
 async def get_group(
-    group_id: int,
+    group_id: int | None = Query(default=0, gt=0),
     conn: AsyncConnection = Depends(engine_connect),
 ):
     cr: CursorResult = await conn.execute(
@@ -387,8 +387,8 @@ async def create_group(
     response_model=schemas.Group,
 )
 async def update_group(
-    group_id: int,
     group: schemas.GroupUpdate,
+    group_id: int | None = Query(default=0, gt=0),
     conn: AsyncConnection = Depends(engine_begin),
 ):
     group_dict = group.dict(exclude_unset=True)
@@ -425,7 +425,7 @@ async def update_group(
     response_class=Response,
 )
 async def delete_group(
-    group_id: int,
+    group_id: int | None = Query(default=0, gt=0),
     conn: AsyncConnection = Depends(engine_begin),
 ):
     cr: CursorResult = await conn.execute(
@@ -456,8 +456,8 @@ async def delete_user_of_group(conn: AsyncConnection = Depends(engine_connect)):
 
 @router.get("/permissions")
 async def list_permissions(
-    skip: int = 0,
-    take: int = 100,
+    skip: int | None = Query(default=0, ge=0),
+    take: int | None = Query(default=100, le=100),
     conn: AsyncConnection = Depends(engine_connect),
 ):
     cr: CursorResult = await conn.execute(
@@ -468,7 +468,7 @@ async def list_permissions(
 
 @router.get("/permissions/{permission_id}")
 async def get_permission(
-    permission_id: int,
+    permission_id: int | None = Query(default=0, gt=0),
     conn: AsyncConnection = Depends(engine_connect),
 ):
     cr: CursorResult = await conn.execute(
@@ -535,8 +535,8 @@ async def list_content_types_of_permission(
 
 @router.get("/superusers")
 async def list_superusers(
-    skip: int = 0,
-    take: int = 100,
+    skip: int | None = Query(default=0, ge=0),
+    take: int | None = Query(default=100, le=100),
     conn: AsyncConnection = Depends(engine_connect),
 ):
     cr: CursorResult = await conn.execute(
