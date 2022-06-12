@@ -35,6 +35,13 @@ class User(BaseModel):
     date_joined: datetime
 
 
-class Group(BaseModel):
-    id: int | None
+class GroupCreate(BaseModel):
     name: str = Field(max_length=150)
+
+
+class GroupUpdate(BaseModel):
+    name: str | None = Field(max_length=150)
+
+
+class Group(GroupCreate):
+    id: int | None

@@ -292,21 +292,59 @@ async def get_group(
     response_model=schemas.Group,
 )
 async def create_group(
-    group: schemas.Group,
+    group: schemas.GroupCreate,
     conn: AsyncConnection = Depends(engine_begin),
 ):
+    await conn.execute(models.groups.insert().values(**group.dict()))
 
-    await conn.execute(models.users.insert().values(**group.dict()))
-
-    return schemas.User(**group.dict())
-
-
-@router.put("/groups/{group_id}")
-async def update_group(conn: AsyncConnection = Depends(engine_begin)):
-    return {}
+    return schemas.Group(**group.dict())
 
 
-@router.delete("/groups/{group_id}")
+@router.put(
+    "/groups/{group_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=schemas.Group,
+)
+async def update_group(
+    group_id: int,
+    group: schemas.GroupUpdate,
+    conn: AsyncConnection = Depends(engine_begin),
+):
+    cr: CursorResult = await conn.execute(
+        models.groups.select().where(models.groups.c.id == group_id)
+    )
+
+    # 1. Fetch saved row from database
+    group_row = cr.first()
+
+    if not group_row:
+        raise item_not_found_exception("Group")
+
+    # 2. Create pydantic model instance from fetched row dict
+    group_model = schemas.Group(**group_row._mapping)
+
+    # 3. Create user input dict from user input json (excludes fields unset)
+    group_dict = group.dict(exclude_unset=True)
+
+    # 4. Create NEW pydantic model from user_model + user_dict
+    group_model_new = group_model.copy(update=group_dict)
+
+    # 5. Update query
+    await conn.execute(
+        models.groups.update()
+        .where(models.groups.c.id == group_id)
+        .values(**group_model_new.dict())
+    )
+
+    # 6. Encode pydantic model into JSON
+    return jsonable_encoder(group_model_new)
+
+
+@router.delete(
+    "/groups/{group_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_class=Response,
+)
 async def delete_group(
     group_id: int,
     conn: AsyncConnection = Depends(engine_begin),
