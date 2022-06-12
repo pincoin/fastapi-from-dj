@@ -182,19 +182,37 @@ async def list_permissions_of_user(conn: AsyncConnection = Depends(engine_connec
     return {}
 
 
-@router.get("/content-types")
+@router.get(
+    "/content-types",
+    status_code=status.HTTP_200_OK,
+    response_model=list[schemas.ContentType],
+)
 async def list_content_types(
     skip: int = 0,
     take: int = 100,
+    app_label: str = None,
+    model: str = None,
     conn: AsyncConnection = Depends(engine_connect),
 ):
-    cr: CursorResult = await conn.execute(
-        models.content_types.select().offset(skip).limit(take)
-    )
+    query = models.content_types.select()
+
+    if app_label:
+        query = query.where(models.content_types.c.app_label == app_label)
+    if model:
+        query = query.where(models.content_types.c.app_label == model)
+
+    query = query.offset(skip).limit(take)
+
+    cr: CursorResult = await conn.execute(query)
+
     return cr.fetchall()
 
 
-@router.get("/content_types/{content_type_id}")
+@router.get(
+    "/content_types/{content_type_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=schemas.ContentType,
+)
 async def get_content_type(
     content_type_id: int,
     conn: AsyncConnection = Depends(engine_connect),
@@ -211,17 +229,66 @@ async def get_content_type(
     raise item_not_found_exception("Content Type")
 
 
-@router.post("/content-types/")
-async def create_content_type(conn: AsyncConnection = Depends(engine_begin)):
-    return {}
+@router.post(
+    "/content-types/",
+    status_code=status.HTTP_201_CREATED,
+    response_model=schemas.ContentType,
+)
+async def create_content_type(
+    content_type: schemas.ContentTypeCreate,
+    conn: AsyncConnection = Depends(engine_begin),
+):
+    await conn.execute(models.content_types.insert().values(**content_type.dict()))
+    return schemas.ContentType(**content_type.dict())
 
 
-@router.put("/content-types/{content_type_id}")
-async def update_content_type(conn: AsyncConnection = Depends(engine_begin)):
-    return {}
+@router.put(
+    "/content-types/{content_type_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=schemas.ContentType,
+)
+async def update_content_type(
+    content_type_id: int,
+    content_type: schemas.ContentTypeUpdate,
+    conn: AsyncConnection = Depends(engine_begin),
+):
+    cr: CursorResult = await conn.execute(
+        models.content_types.select().where(
+            models.content_types.c.id == content_type_id
+        )
+    )
+
+    # 1. Fetch saved row from database
+    content_type_row = cr.first()
+
+    if not content_type_row:
+        raise item_not_found_exception("Content Type")
+
+    # 2. Create pydantic model instance from fetched row dict
+    content_type_model = schemas.ContentType(**content_type_row._mapping)
+
+    # 3. Create user input dict from user input json (excludes fields unset)
+    content_type_dict = content_type.dict(exclude_unset=True)
+
+    # 4. Create NEW pydantic model from user_model + user_dict
+    content_type_model_new = content_type_model.copy(update=content_type_dict)
+
+    # 5. Update query
+    await conn.execute(
+        models.content_types.update()
+        .where(models.content_types.c.id == content_type_id)
+        .values(**content_type_model_new.dict())
+    )
+
+    # 6. Encode pydantic model into JSON
+    return jsonable_encoder(content_type_model_new)
 
 
-@router.delete("/content-types/{content_type_id}")
+@router.delete(
+    "/content-types/{content_type_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_class=Response,
+)
 async def delete_content_type(
     content_type_id: int,
     conn: AsyncConnection = Depends(engine_begin),
@@ -238,7 +305,7 @@ async def delete_content_type(
                 models.content_types.c.id == content_type_id
             )
         )
-        return successful_response(200)
+        return None
 
     raise item_not_found_exception("Content Type")
 
@@ -296,7 +363,6 @@ async def create_group(
     conn: AsyncConnection = Depends(engine_begin),
 ):
     await conn.execute(models.groups.insert().values(**group.dict()))
-
     return schemas.Group(**group.dict())
 
 

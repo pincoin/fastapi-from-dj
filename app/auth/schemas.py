@@ -45,3 +45,17 @@ class GroupUpdate(BaseModel):
 
 class Group(GroupCreate):
     id: int | None
+
+
+class ContentTypeCreate(BaseModel):
+    app_label: str = Field(max_length=100)
+    model: str = Field(max_length=100)
+
+
+class ContentTypeUpdate(BaseModel):
+    app_label: str | None = Field(max_length=100)
+    model: str | None = Field(max_length=100)
+
+
+class ContentType(ContentTypeCreate):
+    id: int | None
