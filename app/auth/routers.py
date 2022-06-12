@@ -42,11 +42,24 @@ async def logout():
 async def list_users(
     skip: int = 0,
     take: int = 100,
+    is_active: bool = True,
+    is_staff: bool = False,
+    is_superuser: bool = False,
     conn: AsyncConnection = Depends(engine_connect),
 ):
-    cr: CursorResult = await conn.execute(
-        models.users.select().offset(skip).limit(take)
-    )
+    query = models.users.select()
+
+    if is_active:
+        query = query.where(models.users.c.is_active == is_active)
+    if is_staff:
+        query = query.where(models.users.c.is_staff == is_staff)
+    if is_superuser:
+        query = query.where(models.users.c.is_superuser == is_superuser)
+
+    query = query.offset(skip).limit(take)
+
+    cr: CursorResult = await conn.execute(query)
+
     return cr.fetchall()
 
 
@@ -84,36 +97,18 @@ async def create_user(
     hash = Pbkdf2Sha256Hasher.hasher(user.password, salt)
     hashed_password = Pbkdf2Sha256Hasher.encode(hash, salt)
 
-    is_active = True
-    is_staff = False
-    is_superuser = False
+    user_dict = user.dict() | {
+        "password": hashed_password,
+        "is_active": True,
+        "is_staff": False,
+        "is_superuser": False,
+        "date_joined": datetime.now(timezone.utc),
+        "last_login": None,
+    }
 
-    date_joined = datetime.now(timezone.utc)
-    last_login = None
+    await conn.execute(models.users.insert().values(**user_dict))
 
-    await conn.execute(
-        models.users.insert().values(
-            password=hashed_password,
-            is_superuser=is_superuser,
-            username=user.username,
-            first_name=user.first_name,
-            last_name=user.last_name,
-            email=user.email,
-            is_staff=is_staff,
-            is_active=is_active,
-            date_joined=date_joined,
-            last_login=last_login,
-        )
-    )
-
-    return schemas.UserResponse(
-        **user.dict(),
-        date_joined=date_joined,
-        is_active=is_active,
-        is_staff=is_staff,
-        is_superuser=is_superuser,
-        last_login=last_login,
-    )
+    return schemas.User(**user_dict)
 
 
 @router.put(
