@@ -183,13 +183,23 @@ async def delete_user(
     raise item_not_found_exception("User")
 
 
-@router.get("/users/{user_id}/groups")
-async def list_groups_of_user(conn: AsyncConnection = Depends(engine_connect)):
+@router.get(
+    "/users/{user_id}/groups",
+)
+async def list_groups_of_user(
+    skip: int | None = Query(default=0, ge=0),
+    take: int | None = Query(default=100, le=100),
+    conn: AsyncConnection = Depends(engine_connect),
+):
     return {}
 
 
 @router.get("/users/{user_id}/permissions")
-async def list_permissions_of_user(conn: AsyncConnection = Depends(engine_connect)):
+async def list_permissions_of_user(
+    skip: int | None = Query(default=0, ge=0),
+    take: int | None = Query(default=100, le=100),
+    conn: AsyncConnection = Depends(engine_connect),
+):
     return {}
 
 
@@ -324,6 +334,8 @@ async def delete_content_type(
 
 @router.get("/content-types/{content_type_id}/permissions")
 async def list_permissions_of_content_type(
+    skip: int | None = Query(default=0, ge=0),
+    take: int | None = Query(default=100, le=100),
     conn: AsyncConnection = Depends(engine_connect),
 ):
     return {}
@@ -440,7 +452,11 @@ async def delete_group(
 
 
 @router.get("/groups/{group_id}/users")
-async def list_users_of_group(conn: AsyncConnection = Depends(engine_connect)):
+async def list_users_of_group(
+    skip: int | None = Query(default=0, ge=0),
+    take: int | None = Query(default=100, le=100),
+    conn: AsyncConnection = Depends(engine_connect),
+):
     return {}
 
 
@@ -497,12 +513,20 @@ async def delete_permission(conn: AsyncConnection = Depends(engine_begin)):
 
 
 @router.get("/permissions/{permission_id}/users")
-async def list_users_of_permission(conn: AsyncConnection = Depends(engine_connect)):
+async def list_users_of_permission(
+    skip: int | None = Query(default=0, ge=0),
+    take: int | None = Query(default=100, le=100),
+    conn: AsyncConnection = Depends(engine_connect),
+):
     return {}
 
 
 @router.get("/permissions/{permission_id}/groups")
-async def list_groups_of_permission(conn: AsyncConnection = Depends(engine_connect)):
+async def list_groups_of_permission(
+    skip: int | None = Query(default=0, ge=0),
+    take: int | None = Query(default=100, le=100),
+    conn: AsyncConnection = Depends(engine_connect),
+):
     return {}
 
 
@@ -528,6 +552,8 @@ async def delete_permission_of_group(conn: AsyncConnection = Depends(engine_conn
 
 @router.get("/permissions/{permission_id}/content-types")
 async def list_content_types_of_permission(
+    skip: int | None = Query(default=0, ge=0),
+    take: int | None = Query(default=100, le=100),
     conn: AsyncConnection = Depends(engine_connect),
 ):
     return {}
