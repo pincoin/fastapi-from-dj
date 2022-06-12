@@ -16,7 +16,8 @@ users = sqlalchemy.Table(
     ),
     sqlalchemy.Column(
         "last_login",
-        sqlalchemy.DateTime,
+        sqlalchemy.types.TIMESTAMP(timezone=True),
+        nullable=True,
     ),
     sqlalchemy.Column(
         "is_superuser",
@@ -53,7 +54,7 @@ users = sqlalchemy.Table(
     ),
     sqlalchemy.Column(
         "date_joined",
-        sqlalchemy.DateTime,
+        sqlalchemy.types.TIMESTAMP(timezone=True),
     ),
 )
 
