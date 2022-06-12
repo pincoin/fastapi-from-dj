@@ -3,7 +3,7 @@ This is a FastAPI boilerplate template for quick start.
 
 This project watches the same database schemes installed by Django.
 
-This project is based on SQLAlchemy 1.4+ in order to utilize async connections.
+This project is based on Python 3.10+ and SQLAlchemy 1.4+ in order to utilize async connections.
 
 ## Features
 * SQLAlchemy Async Core + CRUD on PostgreSQL
@@ -11,6 +11,7 @@ This project is based on SQLAlchemy 1.4+ in order to utilize async connections.
 
 # Getting started
 ## Requirements
+Python 3.10 and above
 * fastapi
 * SQLAlchemy[asyncio]
 * asyncpg

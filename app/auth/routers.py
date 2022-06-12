@@ -1,10 +1,10 @@
-from datetime import datetime
-
+from datetime import datetime, timezone
 from conf.config import get_settings
 from conf.dependencies import engine_begin, engine_connect
 from conf.exceptions import item_not_found_exception
 from conf.responses import successful_response
 from fastapi import APIRouter, Depends, status
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy.engine import CursorResult
 from sqlalchemy.ext.asyncio.engine import AsyncConnection
 
@@ -32,7 +32,12 @@ async def logout():
     return {}
 
 
-@router.get("/users")
+@router.get(
+    "/users",
+    status_code=status.HTTP_200_OK,
+    response_model=list[schemas.User],
+    response_model_exclude={"password"},
+)
 async def list_users(
     skip: int = 0,
     take: int = 100,
@@ -44,7 +49,12 @@ async def list_users(
     return cr.fetchall()
 
 
-@router.get("/users/{user_id}")
+@router.get(
+    "/users/{user_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=schemas.User,
+    response_model_exclude={"password"},
+)
 async def get_user(
     user_id: int,
     conn: AsyncConnection = Depends(engine_connect),
@@ -53,8 +63,8 @@ async def get_user(
         models.users.select().where(models.users.c.id == user_id)
     )
 
-    if user := cr.first():
-        return user
+    if user_row := cr.first():
+        return user_row
 
     raise item_not_found_exception("User")
 
@@ -62,7 +72,8 @@ async def get_user(
 @router.post(
     "/users/",
     status_code=status.HTTP_201_CREATED,
-    response_model=schemas.UserResponse,
+    response_model=schemas.User,
+    response_model_exclude={"password"},
 )
 async def create_user(
     user: schemas.UserCreate,
@@ -76,10 +87,8 @@ async def create_user(
     is_staff = False
     is_superuser = False
 
-    date_joined = datetime.now()
+    date_joined = datetime.now(timezone.utc)
     last_login = None
-
-    print(dir(user))
 
     await conn.execute(
         models.users.insert().values(
@@ -106,9 +115,51 @@ async def create_user(
     )
 
 
-@router.put("/users/{user_id}")
-async def update_user(conn: AsyncConnection = Depends(engine_begin)):
-    return {}
+@router.put(
+    "/users/{user_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=schemas.User,
+    response_model_exclude={"password"},
+)
+async def update_user(
+    user_id: int,
+    user: schemas.UserUpdate,
+    conn: AsyncConnection = Depends(engine_begin),
+):
+    cr: CursorResult = await conn.execute(
+        models.users.select().where(models.users.c.id == user_id)
+    )
+
+    # 1. Fetch saved row from database
+    user_row = cr.first()
+
+    if not user_row:
+        raise item_not_found_exception("User")
+
+    # 4. Pydantic 모델 <= 사용자 입력 dict (업데이트=copy)
+    # 5. Pydantic 모델 json 인코딩
+
+    # 2. Create pydantic model instance from fetched row dict
+    user_model = schemas.User(**user_row._mapping)
+
+    # 3. Create user input dict from user input json (excludes fields unset)
+    user_dict = user.dict(exclude_unset=True)
+
+    # 4. Create NEW pydantic model from user_model + user_dict
+    user_model_new = user_model.copy(update=user_dict)
+
+    # 5. Update query
+    print(user_model_new)
+    print(user_model_new.dict())
+
+    await conn.execute(
+        models.users.update()
+        .where(models.users.c.id == user_id)
+        .values(**user_model_new.dict())
+    )
+
+    # 6. Encode pydantic model into JSON
+    return jsonable_encoder(user_model_new)
 
 
 @router.delete("/users/{user_id}")
@@ -120,7 +171,7 @@ async def delete_user(
         models.users.select().where(models.users.c.id == user_id)
     )
 
-    if user := cr.first():
+    if user_row := cr.first():
         await conn.execute(models.users.delete().where(models.users.c.id == user_id))
         return successful_response(200)
 
@@ -160,8 +211,8 @@ async def get_content_type(
         )
     )
 
-    if content_type := cr.first():
-        return content_type
+    if content_type_row := cr.first():
+        return content_type_row
 
     raise item_not_found_exception("Content Type")
 
@@ -187,7 +238,7 @@ async def delete_content_type(
         )
     )
 
-    if content_type := cr.first():
+    if content_type_row := cr.first():
         await conn.execute(
             models.content_types.delete().where(
                 models.content_types.c.id == content_type_id
@@ -226,8 +277,8 @@ async def get_group(
         models.groups.select().where(models.groups.c.id == group_id)
     )
 
-    if group := cr.first():
-        return group
+    if group_row := cr.first():
+        return group_row
 
     raise item_not_found_exception("Group")
 
@@ -251,7 +302,7 @@ async def delete_group(
         models.groups.select().where(models.groups.c.id == group_id)
     )
 
-    if group := cr.first():
+    if group_row := cr.first():
         await conn.execute(models.groups.delete().where(models.groups.c.id == group_id))
         return successful_response(200)
 
@@ -294,8 +345,8 @@ async def get_permission(
         models.permissions.select().where(models.permissions.c.id == permission_id)
     )
 
-    if permission := cr.first():
-        return permission
+    if permission_row := cr.first():
+        return permission_row
 
     raise item_not_found_exception("Permission")
 

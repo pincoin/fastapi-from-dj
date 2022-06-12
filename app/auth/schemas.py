@@ -16,16 +16,17 @@ class UserUpdate(BaseModel):
     last_name: str | None = Field(max_length=150)
     email: EmailStr | None = None
     password: str | None = Field(max_length=128)
-    is_active: bool | None = True
+    is_active: bool | None = False
     is_staff: bool | None = False
     is_superuser: bool | None = False
 
 
-class UserResponse(BaseModel):
+class User(BaseModel):
     username: str
     first_name: str
     last_name: str
     email: EmailStr
+    password: str
     is_active: bool | None = False
     is_staff: bool | None = False
     is_superuser: bool | None = False
