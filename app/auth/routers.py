@@ -355,7 +355,7 @@ async def delete_group(
 
     if group_row := cr.first():
         await conn.execute(models.groups.delete().where(models.groups.c.id == group_id))
-        return successful_response(200)
+        return None
 
     raise item_not_found_exception("Group")
 
