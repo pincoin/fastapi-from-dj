@@ -189,3 +189,47 @@ user_user_permissions = sqlalchemy.Table(
     ),
     sqlalchemy.UniqueConstraint("user_id", "permission_id"),
 )
+
+
+admin_logs = sqlalchemy.Table(
+    "django_admin_log",
+    metadata,
+    sqlalchemy.Column(
+        "id",
+        sqlalchemy.BigInteger,
+        primary_key=True,
+        index=True,
+    ),
+    sqlalchemy.Column(
+        "action_time",
+        sqlalchemy.types.TIMESTAMP(timezone=True),
+    ),
+    sqlalchemy.Column(
+        "object_id",
+        sqlalchemy.String,
+        nullable=True,
+    ),
+    sqlalchemy.Column(
+        "object_repr",
+        sqlalchemy.String(200),
+    ),
+    sqlalchemy.Column(
+        "action_flag",
+        sqlalchemy.SmallInteger,
+        sqlalchemy.CheckConstraint("action_flag>0"),
+    ),
+    sqlalchemy.Column(
+        "change_message",
+        sqlalchemy.String,
+    ),
+    sqlalchemy.Column(
+        "content_type_id",
+        sqlalchemy.BigInteger,
+        sqlalchemy.ForeignKey("django_content_type.id"),
+    ),
+    sqlalchemy.Column(
+        "user_id",
+        sqlalchemy.BigInteger,
+        sqlalchemy.ForeignKey("auth_user.id"),
+    ),
+)
