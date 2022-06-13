@@ -62,11 +62,13 @@ class ContentType(ContentTypeCreate):
 
 
 class PermissionCreate(BaseModel):
+    content_type_id: int
     name: str = Field(max_length=255)
     codename: str = Field(max_length=100)
 
 
 class PermissionUpdate(BaseModel):
+    content_type_id: int
     name: str | None = Field(max_length=255)
     codename: str | None = Field(max_length=100)
 

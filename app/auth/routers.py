@@ -396,6 +396,102 @@ async def list_permissions_of_content_type(
     return cr.fetchall()
 
 
+@router.post(
+    "/content-types/{content_type_id}/permissions",
+    status_code=fastapi.status.HTTP_201_CREATED,
+    response_model=schemas.Permission,
+)
+async def create_permission_of_content_type(
+    permission: schemas.PermissionCreate,
+    content_type_id: int = fastapi.Query(gt=0),
+    conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
+):
+    permission_dict = permission.dict()
+
+    if permission_dict["content_type_id"] != content_type_id:
+        raise exceptions.bad_request_exception()
+
+    stmt = models.permissions.insert().values(**permission_dict)
+
+    try:
+        await conn.execute(stmt)
+        return schemas.Permission(**permission_dict)
+    except sa.exc.IntegrityError:
+        raise exceptions.conflict_exception()
+
+
+@router.put(
+    "/content-types/{content_type_id}/permissions/{permission_id}",
+    status_code=fastapi.status.HTTP_200_OK,
+    response_model=schemas.Permission,
+)
+async def update_permission_of_content_type(
+    permission: schemas.PermissionUpdate,
+    content_type_id: int = fastapi.Query(gt=0),
+    permission_id: int = fastapi.Query(gt=0),
+    conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
+):
+    permission_dict = permission.dict(exclude_unset=True)
+
+    if not permission_dict:
+        raise exceptions.bad_request_exception()
+
+    if permission_dict["content_type_id"] != content_type_id:
+        raise exceptions.bad_request_exception()
+
+    stmt = sa.select(models.permissions).where(models.permissions.c.id == permission_id)
+
+    cr: sa.engine.CursorResult = await conn.execute(stmt)
+
+    permission_row = cr.first()
+
+    if not permission_row:
+        raise exceptions.item_not_found_exception("Permission")
+
+    permission_model = schemas.Permission(**permission_row._mapping)
+
+    permission_model_new = permission_model.copy(update=permission_dict)
+
+    stmt = (
+        models.permissions.update()
+        .where(models.permissions.c.id == permission_id)
+        .values(**permission_model_new.dict())
+    )
+
+    try:
+        await conn.execute(stmt)
+        return jsonable_encoder(permission_model_new)
+    except sa.exc.IntegrityError:
+        raise exceptions.conflict_exception()
+
+
+@router.delete(
+    "/content-types/{content_type_id}/permissions/{permission_id}",
+    status_code=fastapi.status.HTTP_204_NO_CONTENT,
+    response_class=fastapi.Response,
+)
+async def delete_permission_of_content_type(
+    content_type_id: int = fastapi.Query(gt=0),
+    permission_id: int = fastapi.Query(gt=0),
+    conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
+):
+    stmt = sa.select(models.permissions).where(
+        models.permissions.c.id == permission_id,
+        models.permissions.c.content_type_id == content_type_id,
+    )
+    cr: sa.engine.CursorResult = await conn.execute(stmt)
+
+    if content_type_row := cr.first():
+        stmt = models.permissions.delete().where(
+            models.permissions.c.id == permission_id,
+            models.permissions.c.content_type_id == content_type_id,
+        )
+        await conn.execute(stmt)
+        return None
+
+    raise exceptions.item_not_found_exception("Permission")
+
+
 @router.get(
     "/groups",
     status_code=fastapi.status.HTTP_200_OK,
@@ -604,27 +700,6 @@ async def get_permission(
         return permission_row
 
     raise exceptions.item_not_found_exception("Permission")
-
-
-@router.post("/permissions/")
-async def create_permission(
-    conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
-):
-    return {}
-
-
-@router.put("/permissions/{permission_id}")
-async def update_permission(
-    conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
-):
-    return {}
-
-
-@router.delete("/permissions/{permission_id}")
-async def delete_permission(
-    conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
-):
-    return {}
 
 
 @router.get(
