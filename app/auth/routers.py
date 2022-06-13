@@ -44,18 +44,18 @@ async def list_users(
     is_superuser: bool | None = False,
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
-    query = sa.select(models.users)
+    stmt = sa.select(models.users)
 
     if is_active:
-        query = query.where(models.users.c.is_active == is_active)
+        stmt = stmt.where(models.users.c.is_active == is_active)
     if is_staff:
-        query = query.where(models.users.c.is_staff == is_staff)
+        stmt = stmt.where(models.users.c.is_staff == is_staff)
     if is_superuser:
-        query = query.where(models.users.c.is_superuser == is_superuser)
+        stmt = stmt.where(models.users.c.is_superuser == is_superuser)
 
-    query = query.offset(skip).limit(take)
+    stmt = stmt.offset(skip).limit(take)
 
-    cr: sa.engine.CursorResult = await conn.execute(query)
+    cr: sa.engine.CursorResult = await conn.execute(stmt)
 
     return cr.fetchall()
 
@@ -70,9 +70,9 @@ async def get_user(
     user_id: int | None = fastapi.Query(default=0, gt=0),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
-    cr: sa.engine.CursorResult = await conn.execute(
-        sa.select(models.users).where(models.users.c.id == user_id)
-    )
+    stmt = sa.select(models.users).where(models.users.c.id == user_id)
+
+    cr: sa.engine.CursorResult = await conn.execute(stmt)
 
     if user_row := cr.first():
         return user_row
@@ -103,8 +103,10 @@ async def create_user(
         "last_login": None,
     }
 
+    stmt = models.users.insert().values(**user_dict)
+
     try:
-        await conn.execute(models.users.insert().values(**user_dict))
+        await conn.execute(stmt)
         return schemas.User(**user_dict)
     except sa.exc.IntegrityError:
         raise exceptions.conflict_exception()
@@ -128,9 +130,10 @@ async def update_user(
         raise exceptions.bad_request_exception()
 
     # 2. Fetch saved row from database
-    cr: sa.engine.CursorResult = await conn.execute(
-        sa.select(models.users).where(models.users.c.id == user_id)
-    )
+    stmt = sa.select(models.users).where(models.users.c.id == user_id)
+
+    cr: sa.engine.CursorResult = await conn.execute(stmt)
+
     user_row = cr.first()
 
     if not user_row:
@@ -142,17 +145,20 @@ async def update_user(
     # 4. Create NEW pydantic model from user_model + user_dict
     user_model_new = user_model.copy(update=user_dict)
 
+    stmt = (
+        models.users.update()
+        .where(models.users.c.id == user_id)
+        .values(**user_model_new.dict())
+    )
+
     try:
-        # 5. Update query
-        await conn.execute(
-            models.users.update()
-            .where(models.users.c.id == user_id)
-            .values(**user_model_new.dict())
-        )
+        # 5. Execute update statement
+        await conn.execute(stmt)
 
         # 6. Encode pydantic model into JSON
         return jsonable_encoder(user_model_new)
     except sa.exc.IntegrityError:
+        # Unique fields might be duplicated.
         raise exceptions.conflict_exception()
 
 
@@ -165,12 +171,13 @@ async def delete_user(
     user_id: int | None = fastapi.Query(default=0, gt=0),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
-    cr: sa.engine.CursorResult = await conn.execute(
-        sa.select(models.users).where(models.users.c.id == user_id)
-    )
+    stmt = sa.select(models.users).where(models.users.c.id == user_id)
+
+    cr: sa.engine.CursorResult = await conn.execute(stmt)
 
     if user_row := cr.first():
-        await conn.execute(models.users.delete().where(models.users.c.id == user_id))
+        stmt = models.users.delete().where(models.users.c.id == user_id)
+        await conn.execute(stmt)
         return None
 
     raise exceptions.item_not_found_exception("User")
@@ -185,7 +192,7 @@ async def list_groups_of_user(
     take: int | None = fastapi.Query(default=100, le=100),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
-    query = (
+    stmt = (
         sa.select(
             models.groups,
             models.users,
@@ -200,9 +207,9 @@ async def list_groups_of_user(
         )
         .where(models.users.c.id == user_id)
     )
-    query = query.offset(skip).limit(take)
+    stmt = stmt.offset(skip).limit(take)
 
-    cr: sa.engine.CursorResult = await conn.execute(query)
+    cr: sa.engine.CursorResult = await conn.execute(stmt)
 
     return cr.fetchall()
 
@@ -214,7 +221,7 @@ async def list_permissions_of_user(
     take: int | None = fastapi.Query(default=100, le=100),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
-    query = (
+    stmt = (
         sa.select(
             models.users,
             models.permissions,
@@ -229,9 +236,9 @@ async def list_permissions_of_user(
         )
         .where(models.users.c.id == user_id)
     )
-    query = query.offset(skip).limit(take)
+    stmt = stmt.offset(skip).limit(take)
 
-    cr: sa.engine.CursorResult = await conn.execute(query)
+    cr: sa.engine.CursorResult = await conn.execute(stmt)
 
     return cr.fetchall()
 
@@ -248,16 +255,16 @@ async def list_content_types(
     model: str | None = fastapi.Query(default=None, max_length=100),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
-    query = sa.select(models.content_types)
+    stmt = sa.select(models.content_types)
 
     if app_label:
-        query = query.where(models.content_types.c.app_label == app_label)
+        stmt = stmt.where(models.content_types.c.app_label == app_label)
     if model:
-        query = query.where(models.content_types.c.app_label == model)
+        stmt = stmt.where(models.content_types.c.app_label == model)
 
-    query = query.offset(skip).limit(take)
+    stmt = stmt.offset(skip).limit(take)
 
-    cr: sa.engine.CursorResult = await conn.execute(query)
+    cr: sa.engine.CursorResult = await conn.execute(stmt)
 
     return cr.fetchall()
 
@@ -271,11 +278,11 @@ async def get_content_type(
     content_type_id: int | None = fastapi.Query(default=0, gt=0),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
-    cr: sa.engine.CursorResult = await conn.execute(
-        sa.select(models.content_types).where(
-            models.content_types.c.id == content_type_id
-        )
+    stmt = sa.select(models.content_types).where(
+        models.content_types.c.id == content_type_id
     )
+
+    cr: sa.engine.CursorResult = await conn.execute(stmt)
 
     if content_type_row := cr.first():
         return content_type_row
@@ -292,8 +299,10 @@ async def create_content_type(
     content_type: schemas.ContentTypeCreate,
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
+    stmt = models.content_types.insert().values(**content_type.dict())
+
     try:
-        await conn.execute(models.content_types.insert().values(**content_type.dict()))
+        await conn.execute(stmt)
         return schemas.ContentType(**content_type.dict())
     except sa.exc.IntegrityError:
         raise exceptions.conflict_exception()
@@ -314,11 +323,12 @@ async def update_content_type(
     if not content_type_dict:
         raise exceptions.bad_request_exception()
 
-    cr: sa.engine.CursorResult = await conn.execute(
-        sa.select(models.content_types).where(
-            models.content_types.c.id == content_type_id
-        )
+    stmt = sa.select(models.content_types).where(
+        models.content_types.c.id == content_type_id
     )
+
+    cr: sa.engine.CursorResult = await conn.execute(stmt)
+
     content_type_row = cr.first()
 
     if not content_type_row:
@@ -328,12 +338,14 @@ async def update_content_type(
 
     content_type_model_new = content_type_model.copy(update=content_type_dict)
 
+    stmt = (
+        models.content_types.update()
+        .where(models.content_types.c.id == content_type_id)
+        .values(**content_type_model_new.dict())
+    )
+
     try:
-        await conn.execute(
-            models.content_types.update()
-            .where(models.content_types.c.id == content_type_id)
-            .values(**content_type_model_new.dict())
-        )
+        await conn.execute(stmt)
         return jsonable_encoder(content_type_model_new)
     except sa.exc.IntegrityError:
         raise exceptions.conflict_exception()
@@ -348,18 +360,16 @@ async def delete_content_type(
     content_type_id: int | None = fastapi.Query(default=0, gt=0),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
-    cr: sa.engine.CursorResult = await conn.execute(
-        sa.select(models.content_types).where(
-            models.content_types.c.id == content_type_id
-        )
+    stmt = sa.select(models.content_types).where(
+        models.content_types.c.id == content_type_id
     )
+    cr: sa.engine.CursorResult = await conn.execute(stmt)
 
     if content_type_row := cr.first():
-        await conn.execute(
-            models.content_types.delete().where(
-                models.content_types.c.id == content_type_id
-            )
+        stmt = models.content_types.delete().where(
+            models.content_types.c.id == content_type_id
         )
+        await conn.execute(stmt)
         return None
 
     raise exceptions.item_not_found_exception("Content Type")
@@ -372,7 +382,7 @@ async def list_permissions_of_content_type(
     take: int | None = fastapi.Query(default=100, le=100),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
-    query = (
+    stmt = (
         sa.select(
             models.permissions,
             models.content_types,
@@ -383,9 +393,9 @@ async def list_permissions_of_content_type(
         )
         .where(models.content_types.c.id == content_type_id)
     )
-    query = query.offset(skip).limit(take)
+    stmt = stmt.offset(skip).limit(take)
 
-    cr: sa.engine.CursorResult = await conn.execute(query)
+    cr: sa.engine.CursorResult = await conn.execute(stmt)
 
     return cr.fetchall()
 
@@ -400,9 +410,9 @@ async def list_groups(
     take: int | None = fastapi.Query(default=100, le=100),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
-    query = sa.select(models.groups).offset(skip).limit(take)
+    stmt = sa.select(models.groups).offset(skip).limit(take)
 
-    cr: sa.engine.CursorResult = await conn.execute(query)
+    cr: sa.engine.CursorResult = await conn.execute(stmt)
 
     return cr.fetchall()
 
@@ -416,9 +426,9 @@ async def get_group(
     group_id: int | None = fastapi.Query(default=0, gt=0),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
-    cr: sa.engine.CursorResult = await conn.execute(
-        sa.select(models.groups).where(models.groups.c.id == group_id)
-    )
+    stmt = sa.select(models.groups).where(models.groups.c.id == group_id)
+
+    cr: sa.engine.CursorResult = await conn.execute(stmt)
 
     if group_row := cr.first():
         return group_row
@@ -457,9 +467,10 @@ async def update_group(
     if not group_dict:
         raise exceptions.bad_request_exception()
 
-    cr: sa.engine.CursorResult = await conn.execute(
-        sa.select(models.groups).where(models.groups.c.id == group_id)
-    )
+    stmt = sa.select(models.groups).where(models.groups.c.id == group_id)
+
+    cr: sa.engine.CursorResult = await conn.execute(stmt)
+
     group_row = cr.first()
 
     if not group_row:
@@ -469,12 +480,14 @@ async def update_group(
 
     group_model_new = group_model.copy(update=group_dict)
 
+    stmt = (
+        models.groups.update()
+        .where(models.groups.c.id == group_id)
+        .values(**group_model_new.dict())
+    )
+
     try:
-        await conn.execute(
-            models.groups.update()
-            .where(models.groups.c.id == group_id)
-            .values(**group_model_new.dict())
-        )
+        await conn.execute(stmt)
         return jsonable_encoder(group_model_new)
     except sa.exc.IntegrityError:
         raise exceptions.conflict_exception()
@@ -489,12 +502,13 @@ async def delete_group(
     group_id: int | None = fastapi.Query(default=0, gt=0),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
-    cr: sa.engine.CursorResult = await conn.execute(
-        sa.select(models.groups).where(models.groups.c.id == group_id)
-    )
+    stmt = sa.select(models.groups).where(models.groups.c.id == group_id)
+
+    cr: sa.engine.CursorResult = await conn.execute(stmt)
 
     if group_row := cr.first():
-        await conn.execute(models.groups.delete().where(models.groups.c.id == group_id))
+        stmt = models.groups.delete().where(models.groups.c.id == group_id)
+        await conn.execute(stmt)
         return None
 
     raise exceptions.item_not_found_exception("Group")
@@ -507,7 +521,7 @@ async def list_users_of_group(
     take: int | None = fastapi.Query(default=100, le=100),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
-    query = (
+    stmt = (
         sa.select(
             models.users,
             models.groups,
@@ -522,9 +536,9 @@ async def list_users_of_group(
         )
         .where(models.groups.c.id == group_id)
     )
-    query = query.offset(skip).limit(take)
+    stmt = stmt.offset(skip).limit(take)
 
-    cr: sa.engine.CursorResult = await conn.execute(query)
+    cr: sa.engine.CursorResult = await conn.execute(stmt)
 
     return cr.fetchall()
 
@@ -549,7 +563,7 @@ async def list_permissions(
     take: int | None = fastapi.Query(default=100, le=100),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
-    query = sa.select(
+    stmt = sa.select(
         models.permissions,
         models.content_types.c.app_label,
         models.content_types.c.model,
@@ -557,9 +571,9 @@ async def list_permissions(
         models.permissions,
         models.content_types,
     )
-    query = query.offset(skip).limit(take)
+    stmt = stmt.offset(skip).limit(take)
 
-    cr: sa.engine.CursorResult = await conn.execute(query)
+    cr: sa.engine.CursorResult = await conn.execute(stmt)
 
     return cr.fetchall()
 
@@ -569,9 +583,9 @@ async def get_permission(
     permission_id: int | None = fastapi.Query(default=0, gt=0),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
-    cr: sa.engine.CursorResult = await conn.execute(
-        models.permissions.select().where(models.permissions.c.id == permission_id)
-    )
+    stmt = models.permissions.select().where(models.permissions.c.id == permission_id)
+
+    cr: sa.engine.CursorResult = await conn.execute(stmt)
 
     if permission_row := cr.first():
         return permission_row
@@ -607,7 +621,7 @@ async def list_users_of_permission(
     take: int | None = fastapi.Query(default=100, le=100),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
-    query = (
+    stmt = (
         sa.select(
             models.users,
             models.permissions,
@@ -622,9 +636,9 @@ async def list_users_of_permission(
         )
         .where(models.permissions.c.id == permission_id)
     )
-    query = query.offset(skip).limit(take)
+    stmt = stmt.offset(skip).limit(take)
 
-    cr: sa.engine.CursorResult = await conn.execute(query)
+    cr: sa.engine.CursorResult = await conn.execute(stmt)
 
     return cr.fetchall()
 
@@ -636,7 +650,7 @@ async def list_groups_of_permission(
     take: int | None = fastapi.Query(default=100, le=100),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
-    query = (
+    stmt = (
         sa.select(
             models.groups,
             models.permissions,
@@ -651,9 +665,9 @@ async def list_groups_of_permission(
         )
         .where(models.permissions.c.id == permission_id)
     )
-    query = query.offset(skip).limit(take)
+    stmt = stmt.offset(skip).limit(take)
 
-    cr: sa.engine.CursorResult = await conn.execute(query)
+    cr: sa.engine.CursorResult = await conn.execute(stmt)
 
     return cr.fetchall()
 
@@ -693,7 +707,7 @@ async def list_content_types_of_permission(
     take: int | None = fastapi.Query(default=100, le=100),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
-    query = (
+    stmt = (
         sa.select(
             models.content_types,
             models.permissions,
@@ -704,9 +718,9 @@ async def list_content_types_of_permission(
         )
         .where(models.permissions.c.id == permission_id)
     )
-    query = query.offset(skip).limit(take)
+    stmt = stmt.offset(skip).limit(take)
 
-    cr: sa.engine.CursorResult = await conn.execute(query)
+    cr: sa.engine.CursorResult = await conn.execute(stmt)
 
     return cr.fetchall()
 
@@ -717,10 +731,13 @@ async def list_superusers(
     take: int | None = fastapi.Query(default=100, le=100),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
-    cr: sa.engine.CursorResult = await conn.execute(
+    stmt = (
         models.users.select()
         .where(models.users.c.is_superuser == True)
         .offset(skip)
         .limit(take)
     )
+
+    cr: sa.engine.CursorResult = await conn.execute(stmt)
+
     return cr.fetchall()
