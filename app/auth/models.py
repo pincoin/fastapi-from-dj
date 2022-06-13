@@ -168,7 +168,8 @@ user_groups = sa.Table(
 )
 
 
-user_user_permissions = sa.Table(
+user_permissions = sa.Table(
+    # Django table name does not match the model name.
     "auth_user_user_permissions",
     metadata,
     sa.Column(

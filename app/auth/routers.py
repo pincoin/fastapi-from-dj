@@ -190,16 +190,55 @@ async def list_groups_of_user(
     take: int | None = Query(default=100, le=100),
     conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_connect),
 ):
-    return {}
+    query = (
+        sa.select(
+            models.groups,
+            models.users,
+        )
+        .join_from(
+            models.groups,
+            models.user_groups,
+        )
+        .join_from(
+            models.user_groups,
+            models.users,
+        )
+        .where(models.users.c.id == user_id)
+    )
+    query = query.offset(skip).limit(take)
+
+    cr: sa.engine.CursorResult = await conn.execute(query)
+
+    return cr.fetchall()
 
 
 @router.get("/users/{user_id}/permissions")
 async def list_permissions_of_user(
+    user_id: int = Query(gt=0),
     skip: int | None = Query(default=0, ge=0),
     take: int | None = Query(default=100, le=100),
     conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_connect),
 ):
-    return {}
+    query = (
+        sa.select(
+            models.users,
+            models.permissions,
+        )
+        .join_from(
+            models.users,
+            models.user_permissions,
+        )
+        .join_from(
+            models.user_permissions,
+            models.permissions,
+        )
+        .where(models.users.c.id == user_id)
+    )
+    query = query.offset(skip).limit(take)
+
+    cr: sa.engine.CursorResult = await conn.execute(query)
+
+    return cr.fetchall()
 
 
 @router.get(
@@ -333,11 +372,27 @@ async def delete_content_type(
 
 @router.get("/content-types/{content_type_id}/permissions")
 async def list_permissions_of_content_type(
+    content_type_id: int = Query(gt=0),
     skip: int | None = Query(default=0, ge=0),
     take: int | None = Query(default=100, le=100),
     conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_connect),
 ):
-    return {}
+    query = (
+        sa.select(
+            models.permissions,
+            models.content_types,
+        )
+        .join_from(
+            models.permissions,
+            models.content_types,
+        )
+        .where(models.content_types.c.id == content_type_id)
+    )
+    query = query.offset(skip).limit(take)
+
+    cr: sa.engine.CursorResult = await conn.execute(query)
+
+    return cr.fetchall()
 
 
 @router.get(
@@ -452,11 +507,31 @@ async def delete_group(
 
 @router.get("/groups/{group_id}/users")
 async def list_users_of_group(
+    group_id: int = Query(gt=0),
     skip: int | None = Query(default=0, ge=0),
     take: int | None = Query(default=100, le=100),
     conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_connect),
 ):
-    return {}
+    query = (
+        sa.select(
+            models.users,
+            models.groups,
+        )
+        .join_from(
+            models.users,
+            models.user_groups,
+        )
+        .join_from(
+            models.user_groups,
+            models.groups,
+        )
+        .where(models.groups.c.id == group_id)
+    )
+    query = query.offset(skip).limit(take)
+
+    cr: sa.engine.CursorResult = await conn.execute(query)
+
+    return cr.fetchall()
 
 
 @router.post("/groups/{group_id}/users/{user_id}")
@@ -479,16 +554,17 @@ async def list_permissions(
     take: int | None = Query(default=100, le=100),
     conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_connect),
 ):
-    cr: sa.engine.CursorResult = await conn.execute(
-        sa.select(
-            models.permissions,
-            models.content_types.c.app_label,
-            models.content_types.c.model,
-        ).join_from(
-            models.permissions,
-            models.content_types,
-        )
+    query = sa.select(
+        models.permissions,
+        models.content_types.c.app_label,
+        models.content_types.c.model,
+    ).join_from(
+        models.permissions,
+        models.content_types,
     )
+    query = query.offset(skip).limit(take)
+
+    cr: sa.engine.CursorResult = await conn.execute(query)
 
     return cr.fetchall()
 
@@ -531,6 +607,7 @@ async def delete_permission(
 
 @router.get("/permissions/{permission_id}/users")
 async def list_users_of_permission(
+    permission_id: int = Query(gt=0),
     skip: int | None = Query(default=0, ge=0),
     take: int | None = Query(default=100, le=100),
     conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_connect),
@@ -540,6 +617,7 @@ async def list_users_of_permission(
 
 @router.get("/permissions/{permission_id}/groups")
 async def list_groups_of_permission(
+    permission_id: int = Query(gt=0),
     skip: int | None = Query(default=0, ge=0),
     take: int | None = Query(default=100, le=100),
     conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_connect),
@@ -577,6 +655,7 @@ async def delete_permission_of_group(
 
 @router.get("/permissions/{permission_id}/content-types")
 async def list_content_types_of_permission(
+    permission_id: int = Query(gt=0),
     skip: int | None = Query(default=0, ge=0),
     take: int | None = Query(default=100, le=100),
     conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_connect),
