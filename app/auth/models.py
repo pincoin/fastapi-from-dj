@@ -1,235 +1,235 @@
-import sqlalchemy
+import sqlalchemy as sa
 from conf.database import metadata
 
-users = sqlalchemy.Table(
+users = sa.Table(
     "auth_user",
     metadata,
-    sqlalchemy.Column(
+    sa.Column(
         "id",
-        sqlalchemy.BigInteger,
+        sa.BigInteger,
         primary_key=True,
         index=True,
     ),
-    sqlalchemy.Column(
+    sa.Column(
         "password",
-        sqlalchemy.String(128),
+        sa.String(128),
     ),
-    sqlalchemy.Column(
+    sa.Column(
         "last_login",
-        sqlalchemy.types.TIMESTAMP(timezone=True),
+        sa.types.TIMESTAMP(timezone=True),
         nullable=True,
     ),
-    sqlalchemy.Column(
+    sa.Column(
         "is_superuser",
-        sqlalchemy.Boolean,
+        sa.Boolean,
     ),
-    sqlalchemy.Column(
+    sa.Column(
         "username",
-        sqlalchemy.String(150),
+        sa.String(150),
         index=True,
         unique=True,
     ),
-    sqlalchemy.Column(
+    sa.Column(
         "first_name",
-        sqlalchemy.String(150),
+        sa.String(150),
     ),
-    sqlalchemy.Column(
+    sa.Column(
         "last_name",
-        sqlalchemy.String(150),
+        sa.String(150),
         nullable=True,
     ),
-    sqlalchemy.Column(
+    sa.Column(
         "email",
-        sqlalchemy.String(254),
+        sa.String(254),
         unique=True,
         index=True,
     ),
-    sqlalchemy.Column(
+    sa.Column(
         "is_staff",
-        sqlalchemy.Boolean,
+        sa.Boolean,
     ),
-    sqlalchemy.Column(
+    sa.Column(
         "is_active",
-        sqlalchemy.Boolean,
+        sa.Boolean,
     ),
-    sqlalchemy.Column(
+    sa.Column(
         "date_joined",
-        sqlalchemy.types.TIMESTAMP(timezone=True),
+        sa.types.TIMESTAMP(timezone=True),
     ),
 )
 
-groups = sqlalchemy.Table(
+groups = sa.Table(
     "auth_group",
     metadata,
-    sqlalchemy.Column(
+    sa.Column(
         "id",
-        sqlalchemy.BigInteger,
+        sa.BigInteger,
         primary_key=True,
         index=True,
     ),
-    sqlalchemy.Column(
+    sa.Column(
         "name",
-        sqlalchemy.String(150),
+        sa.String(150),
         unique=True,
     ),
 )
 
 
-content_types = sqlalchemy.Table(
+content_types = sa.Table(
     "django_content_type",
     metadata,
-    sqlalchemy.Column(
+    sa.Column(
         "id",
-        sqlalchemy.BigInteger,
+        sa.BigInteger,
         primary_key=True,
         index=True,
     ),
-    sqlalchemy.Column(
+    sa.Column(
         "app_label",
-        sqlalchemy.String(100),
+        sa.String(100),
     ),
-    sqlalchemy.Column(
+    sa.Column(
         "model",
-        sqlalchemy.String(100),
+        sa.String(100),
     ),
-    sqlalchemy.UniqueConstraint("app_label", "model"),
+    sa.UniqueConstraint("app_label", "model"),
 )
 
 
-permissions = sqlalchemy.Table(
+permissions = sa.Table(
     "auth_permission",
     metadata,
-    sqlalchemy.Column(
+    sa.Column(
         "id",
-        sqlalchemy.BigInteger,
+        sa.BigInteger,
         primary_key=True,
         index=True,
     ),
-    sqlalchemy.Column(
+    sa.Column(
         "name",
-        sqlalchemy.String(255),
+        sa.String(255),
     ),
-    sqlalchemy.Column(
+    sa.Column(
         "content_type_id",
-        sqlalchemy.BigInteger,
-        sqlalchemy.ForeignKey("django_content_type.id"),
+        sa.BigInteger,
+        sa.ForeignKey("django_content_type.id"),
     ),
-    sqlalchemy.Column(
+    sa.Column(
         "codename",
-        sqlalchemy.String(100),
+        sa.String(100),
     ),
-    sqlalchemy.UniqueConstraint("content_type_id", "codename"),
+    sa.UniqueConstraint("content_type_id", "codename"),
 )
 
 
-group_permissions = sqlalchemy.Table(
+group_permissions = sa.Table(
     "auth_group_permissions",
     metadata,
-    sqlalchemy.Column(
+    sa.Column(
         "id",
-        sqlalchemy.BigInteger,
+        sa.BigInteger,
         primary_key=True,
         index=True,
     ),
-    sqlalchemy.Column(
+    sa.Column(
         "group_id",
-        sqlalchemy.BigInteger,
-        sqlalchemy.ForeignKey("auth_group.id"),
+        sa.BigInteger,
+        sa.ForeignKey("auth_group.id"),
     ),
-    sqlalchemy.Column(
+    sa.Column(
         "permission_id",
-        sqlalchemy.BigInteger,
-        sqlalchemy.ForeignKey("auth_permission.id"),
+        sa.BigInteger,
+        sa.ForeignKey("auth_permission.id"),
     ),
-    sqlalchemy.UniqueConstraint("group_id", "permission_id"),
+    sa.UniqueConstraint("group_id", "permission_id"),
 )
 
 
-user_groups = sqlalchemy.Table(
+user_groups = sa.Table(
     "auth_user_groups",
     metadata,
-    sqlalchemy.Column(
+    sa.Column(
         "id",
-        sqlalchemy.BigInteger,
+        sa.BigInteger,
         primary_key=True,
         index=True,
     ),
-    sqlalchemy.Column(
+    sa.Column(
         "user_id",
-        sqlalchemy.BigInteger,
-        sqlalchemy.ForeignKey("auth_user.id"),
+        sa.BigInteger,
+        sa.ForeignKey("auth_user.id"),
     ),
-    sqlalchemy.Column(
+    sa.Column(
         "group_id",
-        sqlalchemy.BigInteger,
-        sqlalchemy.ForeignKey("auth_group.id"),
+        sa.BigInteger,
+        sa.ForeignKey("auth_group.id"),
     ),
-    sqlalchemy.UniqueConstraint("user_id", "group_id"),
+    sa.UniqueConstraint("user_id", "group_id"),
 )
 
 
-user_user_permissions = sqlalchemy.Table(
+user_user_permissions = sa.Table(
     "auth_user_user_permissions",
     metadata,
-    sqlalchemy.Column(
+    sa.Column(
         "id",
-        sqlalchemy.BigInteger,
+        sa.BigInteger,
         primary_key=True,
         index=True,
     ),
-    sqlalchemy.Column(
+    sa.Column(
         "user_id",
-        sqlalchemy.BigInteger,
-        sqlalchemy.ForeignKey("auth_user.id"),
+        sa.BigInteger,
+        sa.ForeignKey("auth_user.id"),
     ),
-    sqlalchemy.Column(
+    sa.Column(
         "permission_id",
-        sqlalchemy.BigInteger,
-        sqlalchemy.ForeignKey("auth_permission.id"),
+        sa.BigInteger,
+        sa.ForeignKey("auth_permission.id"),
     ),
-    sqlalchemy.UniqueConstraint("user_id", "permission_id"),
+    sa.UniqueConstraint("user_id", "permission_id"),
 )
 
 
-admin_logs = sqlalchemy.Table(
+admin_logs = sa.Table(
     "django_admin_log",
     metadata,
-    sqlalchemy.Column(
+    sa.Column(
         "id",
-        sqlalchemy.BigInteger,
+        sa.BigInteger,
         primary_key=True,
         index=True,
     ),
-    sqlalchemy.Column(
+    sa.Column(
         "action_time",
-        sqlalchemy.types.TIMESTAMP(timezone=True),
+        sa.types.TIMESTAMP(timezone=True),
     ),
-    sqlalchemy.Column(
+    sa.Column(
         "object_id",
-        sqlalchemy.String,
+        sa.String,
         nullable=True,
     ),
-    sqlalchemy.Column(
+    sa.Column(
         "object_repr",
-        sqlalchemy.String(200),
+        sa.String(200),
     ),
-    sqlalchemy.Column(
+    sa.Column(
         "action_flag",
-        sqlalchemy.SmallInteger,
-        sqlalchemy.CheckConstraint("action_flag>0"),
+        sa.SmallInteger,
+        sa.CheckConstraint("action_flag>0"),
     ),
-    sqlalchemy.Column(
+    sa.Column(
         "change_message",
-        sqlalchemy.String,
+        sa.String,
     ),
-    sqlalchemy.Column(
+    sa.Column(
         "content_type_id",
-        sqlalchemy.BigInteger,
-        sqlalchemy.ForeignKey("django_content_type.id"),
+        sa.BigInteger,
+        sa.ForeignKey("django_content_type.id"),
     ),
-    sqlalchemy.Column(
+    sa.Column(
         "user_id",
-        sqlalchemy.BigInteger,
-        sqlalchemy.ForeignKey("auth_user.id"),
+        sa.BigInteger,
+        sa.ForeignKey("auth_user.id"),
     ),
 )
