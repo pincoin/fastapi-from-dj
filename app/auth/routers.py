@@ -106,8 +106,11 @@ async def create_user(
     stmt = models.users.insert().values(**user_dict)
 
     try:
-        await conn.execute(stmt)
-        return schemas.User(**user_dict)
+        cr: sa.engine.CursorResult = await conn.execute(stmt)
+        return schemas.User(
+            **user_dict,
+            id=cr.inserted_primary_key[0],
+        )
     except sa.exc.IntegrityError:
         raise exceptions.conflict_exception()
 
@@ -294,8 +297,11 @@ async def create_content_type(
     stmt = models.content_types.insert().values(**content_type.dict())
 
     try:
-        await conn.execute(stmt)
-        return schemas.ContentType(**content_type.dict())
+        cr: sa.engine.CursorResult = await conn.execute(stmt)
+        return schemas.ContentType(
+            **content_type.dict(),
+            id=cr.inserted_primary_key[0],
+        )
     except sa.exc.IntegrityError:
         raise exceptions.conflict_exception()
 
@@ -414,8 +420,11 @@ async def create_permission_of_content_type(
     stmt = models.permissions.insert().values(**permission_dict)
 
     try:
-        await conn.execute(stmt)
-        return schemas.Permission(**permission_dict)
+        cr: sa.engine.CursorResult = await conn.execute(stmt)
+        return schemas.Permission(
+            **permission_dict,
+            id=cr.inserted_primary_key[0],
+        )
     except sa.exc.IntegrityError:
         raise exceptions.conflict_exception()
 
@@ -537,9 +546,13 @@ async def create_group(
     group: schemas.GroupCreate,
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
+    stmt = models.groups.insert().values(**group.dict())
     try:
-        await conn.execute(models.groups.insert().values(**group.dict()))
-        return schemas.Group(**group.dict())
+        cr: sa.engine.CursorResult = await conn.execute(stmt)
+        return schemas.Group(
+            **group.dict(),
+            id=cr.inserted_primary_key[0],
+        )
     except sa.exc.IntegrityError:
         raise exceptions.conflict_exception()
 
