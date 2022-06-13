@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-import sqlalchemy
+import sqlalchemy as sa
 from conf.config import get_settings
 from conf.dependencies import engine_begin, engine_connect
 from conf.exceptions import (
@@ -8,10 +8,8 @@ from conf.exceptions import (
     conflict_exception,
     item_not_found_exception,
 )
-from fastapi import APIRouter, Depends, Response, status, Query
+from fastapi import APIRouter, Depends, Query, Response, status
 from fastapi.encoders import jsonable_encoder
-from sqlalchemy.engine import CursorResult
-from sqlalchemy.ext.asyncio.engine import AsyncConnection
 
 from . import models, schemas
 from .utils import Pbkdf2Sha256Hasher
@@ -49,7 +47,7 @@ async def list_users(
     is_active: bool | None = True,
     is_staff: bool | None = False,
     is_superuser: bool | None = False,
-    conn: AsyncConnection = Depends(engine_connect),
+    conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_connect),
 ):
     query = models.users.select()
 
@@ -62,7 +60,7 @@ async def list_users(
 
     query = query.offset(skip).limit(take)
 
-    cr: CursorResult = await conn.execute(query)
+    cr: sa.engine.CursorResult = await conn.execute(query)
 
     return cr.fetchall()
 
@@ -75,9 +73,9 @@ async def list_users(
 )
 async def get_user(
     user_id: int | None = Query(default=0, gt=0),
-    conn: AsyncConnection = Depends(engine_connect),
+    conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_connect),
 ):
-    cr: CursorResult = await conn.execute(
+    cr: sa.engine.CursorResult = await conn.execute(
         models.users.select().where(models.users.c.id == user_id)
     )
 
@@ -95,7 +93,7 @@ async def get_user(
 )
 async def create_user(
     user: schemas.UserCreate,
-    conn: AsyncConnection = Depends(engine_begin),
+    conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_begin),
 ):
     salt = Pbkdf2Sha256Hasher.salt()
     hash = Pbkdf2Sha256Hasher.hasher(user.password, salt)
@@ -113,7 +111,7 @@ async def create_user(
     try:
         await conn.execute(models.users.insert().values(**user_dict))
         return schemas.User(**user_dict)
-    except sqlalchemy.exc.IntegrityError:
+    except sa.exc.IntegrityError:
         raise conflict_exception()
 
 
@@ -126,7 +124,7 @@ async def create_user(
 async def update_user(
     user: schemas.UserUpdate,
     user_id: int | None = Query(default=0, gt=0),
-    conn: AsyncConnection = Depends(engine_begin),
+    conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_begin),
 ):
     # 1. Create user input dict from user input json (excludes fields unset)
     user_dict = user.dict(exclude_unset=True)
@@ -135,7 +133,7 @@ async def update_user(
         raise bad_request_exception()
 
     # 2. Fetch saved row from database
-    cr: CursorResult = await conn.execute(
+    cr: sa.engine.CursorResult = await conn.execute(
         models.users.select().where(models.users.c.id == user_id)
     )
     user_row = cr.first()
@@ -159,7 +157,7 @@ async def update_user(
 
         # 6. Encode pydantic model into JSON
         return jsonable_encoder(user_model_new)
-    except sqlalchemy.exc.IntegrityError:
+    except sa.exc.IntegrityError:
         raise conflict_exception()
 
 
@@ -170,9 +168,9 @@ async def update_user(
 )
 async def delete_user(
     user_id: int | None = Query(default=0, gt=0),
-    conn: AsyncConnection = Depends(engine_begin),
+    conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_begin),
 ):
-    cr: CursorResult = await conn.execute(
+    cr: sa.engine.CursorResult = await conn.execute(
         models.users.select().where(models.users.c.id == user_id)
     )
 
@@ -190,7 +188,7 @@ async def list_groups_of_user(
     user_id: int = Query(gt=0),
     skip: int | None = Query(default=0, ge=0),
     take: int | None = Query(default=100, le=100),
-    conn: AsyncConnection = Depends(engine_connect),
+    conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_connect),
 ):
     return {}
 
@@ -199,7 +197,7 @@ async def list_groups_of_user(
 async def list_permissions_of_user(
     skip: int | None = Query(default=0, ge=0),
     take: int | None = Query(default=100, le=100),
-    conn: AsyncConnection = Depends(engine_connect),
+    conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_connect),
 ):
     return {}
 
@@ -214,7 +212,7 @@ async def list_content_types(
     take: int | None = Query(default=100, le=100),
     app_label: str | None = Query(default=None, max_length=100),
     model: str | None = Query(default=None, max_length=100),
-    conn: AsyncConnection = Depends(engine_connect),
+    conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_connect),
 ):
     query = models.content_types.select()
 
@@ -225,7 +223,7 @@ async def list_content_types(
 
     query = query.offset(skip).limit(take)
 
-    cr: CursorResult = await conn.execute(query)
+    cr: sa.engine.CursorResult = await conn.execute(query)
 
     return cr.fetchall()
 
@@ -237,9 +235,9 @@ async def list_content_types(
 )
 async def get_content_type(
     content_type_id: int | None = Query(default=0, gt=0),
-    conn: AsyncConnection = Depends(engine_connect),
+    conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_connect),
 ):
-    cr: CursorResult = await conn.execute(
+    cr: sa.engine.CursorResult = await conn.execute(
         models.content_types.select().where(
             models.content_types.c.id == content_type_id
         )
@@ -258,12 +256,12 @@ async def get_content_type(
 )
 async def create_content_type(
     content_type: schemas.ContentTypeCreate,
-    conn: AsyncConnection = Depends(engine_begin),
+    conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_begin),
 ):
     try:
         await conn.execute(models.content_types.insert().values(**content_type.dict()))
         return schemas.ContentType(**content_type.dict())
-    except sqlalchemy.exc.IntegrityError:
+    except sa.exc.IntegrityError:
         raise conflict_exception()
 
 
@@ -275,14 +273,14 @@ async def create_content_type(
 async def update_content_type(
     content_type: schemas.ContentTypeUpdate,
     content_type_id: int | None = Query(default=0, gt=0),
-    conn: AsyncConnection = Depends(engine_begin),
+    conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_begin),
 ):
     content_type_dict = content_type.dict(exclude_unset=True)
 
     if not content_type_dict:
         raise bad_request_exception()
 
-    cr: CursorResult = await conn.execute(
+    cr: sa.engine.CursorResult = await conn.execute(
         models.content_types.select().where(
             models.content_types.c.id == content_type_id
         )
@@ -303,7 +301,7 @@ async def update_content_type(
             .values(**content_type_model_new.dict())
         )
         return jsonable_encoder(content_type_model_new)
-    except sqlalchemy.exc.IntegrityError:
+    except sa.exc.IntegrityError:
         raise conflict_exception()
 
 
@@ -314,9 +312,9 @@ async def update_content_type(
 )
 async def delete_content_type(
     content_type_id: int | None = Query(default=0, gt=0),
-    conn: AsyncConnection = Depends(engine_begin),
+    conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_begin),
 ):
-    cr: CursorResult = await conn.execute(
+    cr: sa.engine.CursorResult = await conn.execute(
         models.content_types.select().where(
             models.content_types.c.id == content_type_id
         )
@@ -337,7 +335,7 @@ async def delete_content_type(
 async def list_permissions_of_content_type(
     skip: int | None = Query(default=0, ge=0),
     take: int | None = Query(default=100, le=100),
-    conn: AsyncConnection = Depends(engine_connect),
+    conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_connect),
 ):
     return {}
 
@@ -350,11 +348,11 @@ async def list_permissions_of_content_type(
 async def list_groups(
     skip: int | None = Query(default=0, ge=0),
     take: int | None = Query(default=100, le=100),
-    conn: AsyncConnection = Depends(engine_connect),
+    conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_connect),
 ):
     query = models.groups.select().offset(skip).limit(take)
 
-    cr: CursorResult = await conn.execute(query)
+    cr: sa.engine.CursorResult = await conn.execute(query)
 
     return cr.fetchall()
 
@@ -366,9 +364,9 @@ async def list_groups(
 )
 async def get_group(
     group_id: int | None = Query(default=0, gt=0),
-    conn: AsyncConnection = Depends(engine_connect),
+    conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_connect),
 ):
-    cr: CursorResult = await conn.execute(
+    cr: sa.engine.CursorResult = await conn.execute(
         models.groups.select().where(models.groups.c.id == group_id)
     )
 
@@ -385,12 +383,12 @@ async def get_group(
 )
 async def create_group(
     group: schemas.GroupCreate,
-    conn: AsyncConnection = Depends(engine_begin),
+    conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_begin),
 ):
     try:
         await conn.execute(models.groups.insert().values(**group.dict()))
         return schemas.Group(**group.dict())
-    except sqlalchemy.exc.IntegrityError:
+    except sa.exc.IntegrityError:
         raise conflict_exception()
 
 
@@ -402,14 +400,14 @@ async def create_group(
 async def update_group(
     group: schemas.GroupUpdate,
     group_id: int | None = Query(default=0, gt=0),
-    conn: AsyncConnection = Depends(engine_begin),
+    conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_begin),
 ):
     group_dict = group.dict(exclude_unset=True)
 
     if not group_dict:
         raise bad_request_exception()
 
-    cr: CursorResult = await conn.execute(
+    cr: sa.engine.CursorResult = await conn.execute(
         models.groups.select().where(models.groups.c.id == group_id)
     )
     group_row = cr.first()
@@ -428,7 +426,7 @@ async def update_group(
             .values(**group_model_new.dict())
         )
         return jsonable_encoder(group_model_new)
-    except sqlalchemy.exc.IntegrityError:
+    except sa.exc.IntegrityError:
         raise conflict_exception()
 
 
@@ -439,9 +437,9 @@ async def update_group(
 )
 async def delete_group(
     group_id: int | None = Query(default=0, gt=0),
-    conn: AsyncConnection = Depends(engine_begin),
+    conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_begin),
 ):
-    cr: CursorResult = await conn.execute(
+    cr: sa.engine.CursorResult = await conn.execute(
         models.groups.select().where(models.groups.c.id == group_id)
     )
 
@@ -456,18 +454,22 @@ async def delete_group(
 async def list_users_of_group(
     skip: int | None = Query(default=0, ge=0),
     take: int | None = Query(default=100, le=100),
-    conn: AsyncConnection = Depends(engine_connect),
+    conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_connect),
 ):
     return {}
 
 
 @router.post("/groups/{group_id}/users/{user_id}")
-async def create_user_of_group(conn: AsyncConnection = Depends(engine_connect)):
+async def create_user_of_group(
+    conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_connect),
+):
     return {}
 
 
 @router.delete("/groups/{group_id}/users/{user_id}")
-async def delete_user_of_group(conn: AsyncConnection = Depends(engine_connect)):
+async def delete_user_of_group(
+    conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_connect),
+):
     return {}
 
 
@@ -475,20 +477,28 @@ async def delete_user_of_group(conn: AsyncConnection = Depends(engine_connect)):
 async def list_permissions(
     skip: int | None = Query(default=0, ge=0),
     take: int | None = Query(default=100, le=100),
-    conn: AsyncConnection = Depends(engine_connect),
+    conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_connect),
 ):
-    cr: CursorResult = await conn.execute(
-        models.permissions.select().offset(skip).limit(take)
+    cr: sa.engine.CursorResult = await conn.execute(
+        sa.select(
+            models.permissions,
+            models.content_types.c.app_label,
+            models.content_types.c.model,
+        ).join_from(
+            models.permissions,
+            models.content_types,
+        )
     )
+
     return cr.fetchall()
 
 
 @router.get("/permissions/{permission_id}")
 async def get_permission(
     permission_id: int | None = Query(default=0, gt=0),
-    conn: AsyncConnection = Depends(engine_connect),
+    conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_connect),
 ):
-    cr: CursorResult = await conn.execute(
+    cr: sa.engine.CursorResult = await conn.execute(
         models.permissions.select().where(models.permissions.c.id == permission_id)
     )
 
@@ -499,17 +509,23 @@ async def get_permission(
 
 
 @router.post("/permissions/")
-async def create_permission(conn: AsyncConnection = Depends(engine_begin)):
+async def create_permission(
+    conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_begin),
+):
     return {}
 
 
 @router.put("/permissions/{permission_id}")
-async def update_permission(conn: AsyncConnection = Depends(engine_begin)):
+async def update_permission(
+    conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_begin),
+):
     return {}
 
 
 @router.delete("/permissions/{permission_id}")
-async def delete_permission(conn: AsyncConnection = Depends(engine_begin)):
+async def delete_permission(
+    conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_begin),
+):
     return {}
 
 
@@ -517,7 +533,7 @@ async def delete_permission(conn: AsyncConnection = Depends(engine_begin)):
 async def list_users_of_permission(
     skip: int | None = Query(default=0, ge=0),
     take: int | None = Query(default=100, le=100),
-    conn: AsyncConnection = Depends(engine_connect),
+    conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_connect),
 ):
     return {}
 
@@ -526,28 +542,36 @@ async def list_users_of_permission(
 async def list_groups_of_permission(
     skip: int | None = Query(default=0, ge=0),
     take: int | None = Query(default=100, le=100),
-    conn: AsyncConnection = Depends(engine_connect),
+    conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_connect),
 ):
     return {}
 
 
 @router.post("/permissions/{permission_id}/user/{user_id}")
-async def create_permission_of_user(conn: AsyncConnection = Depends(engine_connect)):
+async def create_permission_of_user(
+    conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_connect),
+):
     return {}
 
 
 @router.delete("/permissions/{permission_id}/user/{user_id}")
-async def delete_permission_of_user(conn: AsyncConnection = Depends(engine_connect)):
+async def delete_permission_of_user(
+    conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_connect),
+):
     return {}
 
 
 @router.post("/permissions/{permission_id}/group/{group_id}")
-async def create_permission_of_group(conn: AsyncConnection = Depends(engine_connect)):
+async def create_permission_of_group(
+    conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_connect),
+):
     return {}
 
 
 @router.delete("/permissions/{permission_id}/group/{group_id}")
-async def delete_permission_of_group(conn: AsyncConnection = Depends(engine_connect)):
+async def delete_permission_of_group(
+    conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_connect),
+):
     return {}
 
 
@@ -555,7 +579,7 @@ async def delete_permission_of_group(conn: AsyncConnection = Depends(engine_conn
 async def list_content_types_of_permission(
     skip: int | None = Query(default=0, ge=0),
     take: int | None = Query(default=100, le=100),
-    conn: AsyncConnection = Depends(engine_connect),
+    conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_connect),
 ):
     return {}
 
@@ -564,9 +588,9 @@ async def list_content_types_of_permission(
 async def list_superusers(
     skip: int | None = Query(default=0, ge=0),
     take: int | None = Query(default=100, le=100),
-    conn: AsyncConnection = Depends(engine_connect),
+    conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_connect),
 ):
-    cr: CursorResult = await conn.execute(
+    cr: sa.engine.CursorResult = await conn.execute(
         models.users.select()
         .where(models.users.c.is_superuser == True)
         .offset(skip)
