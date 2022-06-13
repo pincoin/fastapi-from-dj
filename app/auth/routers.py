@@ -187,6 +187,7 @@ async def delete_user(
     "/users/{user_id}/groups",
 )
 async def list_groups_of_user(
+    user_id: int = Query(gt=0),
     skip: int | None = Query(default=0, ge=0),
     take: int | None = Query(default=100, le=100),
     conn: AsyncConnection = Depends(engine_connect),
