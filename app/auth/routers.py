@@ -739,19 +739,4 @@ async def list_content_types_of_permission(
     return cr.fetchall()
 
 
-@router.get("/superusers")
-async def list_superusers(
-    skip: int | None = fastapi.Query(default=0, ge=0),
-    take: int | None = fastapi.Query(default=100, le=100),
-    conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
-):
-    stmt = (
-        models.users.select()
-        .where(models.users.c.is_superuser == True)
-        .offset(skip)
-        .limit(take)
-    )
-
-    cr: sa.engine.CursorResult = await conn.execute(stmt)
-
-    return cr.fetchall()
+list_superusers
