@@ -557,7 +557,10 @@ async def delete_user_of_group(
     return {}
 
 
-@router.get("/permissions")
+@router.get(
+    "/permissions",
+    status_code=fastapi.status.HTTP_200_OK,
+)
 async def list_permissions(
     skip: int | None = fastapi.Query(default=0, ge=0),
     take: int | None = fastapi.Query(default=100, le=100),
@@ -583,7 +586,18 @@ async def get_permission(
     permission_id: int | None = fastapi.Query(default=0, gt=0),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
-    stmt = models.permissions.select().where(models.permissions.c.id == permission_id)
+    stmt = (
+        sa.select(
+            models.permissions,
+            models.content_types.c.app_label,
+            models.content_types.c.model,
+        )
+        .join_from(
+            models.permissions,
+            models.content_types,
+        )
+        .where(models.permissions.c.id == permission_id)
+    )
 
     cr: sa.engine.CursorResult = await conn.execute(stmt)
 
