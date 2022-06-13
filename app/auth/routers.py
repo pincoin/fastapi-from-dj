@@ -737,6 +737,3 @@ async def list_content_types_of_permission(
     cr: sa.engine.CursorResult = await conn.execute(stmt)
 
     return cr.fetchall()
-
-
-list_superusers
