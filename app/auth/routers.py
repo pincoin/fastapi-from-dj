@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 
+import asyncpg
 import fastapi
 import sqlalchemy as sa
 from conf import config, exceptions
@@ -161,7 +162,6 @@ async def update_user(
         # 6. Encode pydantic model into JSON
         return jsonable_encoder(user_model_new)
     except sa.exc.IntegrityError:
-        # Unique fields might be duplicated.
         raise exceptions.conflict_exception()
 
 
@@ -646,18 +646,44 @@ async def list_users_of_group(
     return cr.fetchall()
 
 
-@router.post("/groups/{group_id}/users/{user_id}")
+@router.post(
+    "/groups/{group_id}/users/{user_id}",
+    status_code=fastapi.status.HTTP_201_CREATED,
+    # response_model=schemas.UserGroup,
+)
 async def create_user_of_group(
-    conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
+    group_id: int = fastapi.Query(gt=0),
+    user_id: int = fastapi.Query(gt=0),
+    conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
     return {}
 
 
-@router.delete("/groups/{group_id}/users/{user_id}")
+@router.delete(
+    "/groups/{group_id}/users/{user_id}",
+    status_code=fastapi.status.HTTP_204_NO_CONTENT,
+    response_class=fastapi.Response,
+)
 async def delete_user_of_group(
-    conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
+    group_id: int = fastapi.Query(gt=0),
+    user_id: int = fastapi.Query(gt=0),
+    conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
-    return {}
+    stmt = sa.select(models.user_groups).where(
+        models.user_groups.c.user_id == user_id,
+        models.user_groups.c.group_id == group_id,
+    )
+    cr: sa.engine.CursorResult = await conn.execute(stmt)
+
+    if content_type_row := cr.first():
+        stmt = models.user_groups.delete().where(
+            models.user_groups.c.user_id == user_id,
+            models.user_groups.c.group_id == group_id,
+        )
+        await conn.execute(stmt)
+        return None
+
+    raise exceptions.item_not_found_exception("User Group")
 
 
 @router.get(

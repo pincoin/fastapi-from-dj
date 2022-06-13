@@ -112,7 +112,10 @@ permissions = sa.Table(
     sa.Column(
         "content_type_id",
         sa.BigInteger,
-        sa.ForeignKey("django_content_type.id"),
+        sa.ForeignKey(
+            "django_content_type.id", onupdate="CASCADE", ondelete="SET NULL"
+        ),
+        nullable=True,
     ),
     sa.Column(
         "codename",
@@ -134,12 +137,14 @@ group_permissions = sa.Table(
     sa.Column(
         "group_id",
         sa.BigInteger,
-        sa.ForeignKey("auth_group.id"),
+        sa.ForeignKey("auth_group.id", onupdate="CASCADE", ondelete="SET NULL"),
+        nullable=True,
     ),
     sa.Column(
         "permission_id",
         sa.BigInteger,
-        sa.ForeignKey("auth_permission.id"),
+        sa.ForeignKey("auth_permission.id", onupdate="CASCADE", ondelete="SET NULL"),
+        nullable=True,
     ),
     sa.UniqueConstraint("group_id", "permission_id"),
 )
@@ -157,12 +162,14 @@ user_groups = sa.Table(
     sa.Column(
         "user_id",
         sa.BigInteger,
-        sa.ForeignKey("auth_user.id"),
+        sa.ForeignKey("auth_user.id", onupdate="CASCADE", ondelete="SET NULL"),
+        nullable=True,
     ),
     sa.Column(
         "group_id",
         sa.BigInteger,
-        sa.ForeignKey("auth_group.id"),
+        sa.ForeignKey("auth_group.id", onupdate="CASCADE", ondelete="SET NULL"),
+        nullable=True,
     ),
     sa.UniqueConstraint("user_id", "group_id"),
 )
@@ -181,12 +188,14 @@ user_permissions = sa.Table(
     sa.Column(
         "user_id",
         sa.BigInteger,
-        sa.ForeignKey("auth_user.id"),
+        sa.ForeignKey("auth_user.id", onupdate="CASCADE", ondelete="SET NULL"),
+        nullable=True,
     ),
     sa.Column(
         "permission_id",
         sa.BigInteger,
-        sa.ForeignKey("auth_permission.id"),
+        sa.ForeignKey("auth_permission.id", onupdate="CASCADE", ondelete="SET NULL"),
+        nullable=True,
     ),
     sa.UniqueConstraint("user_id", "permission_id"),
 )

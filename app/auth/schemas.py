@@ -75,3 +75,9 @@ class PermissionUpdate(BaseModel):
 
 class Permission(PermissionCreate):
     id: int | None
+
+
+class UserGroup(BaseModel):
+    id: int | None
+    user_id: int
+    group_id: int
