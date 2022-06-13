@@ -49,7 +49,7 @@ async def list_users(
     is_superuser: bool | None = False,
     conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_connect),
 ):
-    query = models.users.select()
+    query = sa.select(models.users)
 
     if is_active:
         query = query.where(models.users.c.is_active == is_active)
@@ -76,7 +76,7 @@ async def get_user(
     conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_connect),
 ):
     cr: sa.engine.CursorResult = await conn.execute(
-        models.users.select().where(models.users.c.id == user_id)
+        sa.select(models.users).where(models.users.c.id == user_id)
     )
 
     if user_row := cr.first():
@@ -134,7 +134,7 @@ async def update_user(
 
     # 2. Fetch saved row from database
     cr: sa.engine.CursorResult = await conn.execute(
-        models.users.select().where(models.users.c.id == user_id)
+        sa.select(models.users).where(models.users.c.id == user_id)
     )
     user_row = cr.first()
 
@@ -171,7 +171,7 @@ async def delete_user(
     conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_begin),
 ):
     cr: sa.engine.CursorResult = await conn.execute(
-        models.users.select().where(models.users.c.id == user_id)
+        sa.select(models.users).where(models.users.c.id == user_id)
     )
 
     if user_row := cr.first():
@@ -214,7 +214,7 @@ async def list_content_types(
     model: str | None = Query(default=None, max_length=100),
     conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_connect),
 ):
-    query = models.content_types.select()
+    query = sa.select(models.content_types)
 
     if app_label:
         query = query.where(models.content_types.c.app_label == app_label)
@@ -238,7 +238,7 @@ async def get_content_type(
     conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_connect),
 ):
     cr: sa.engine.CursorResult = await conn.execute(
-        models.content_types.select().where(
+        sa.select(models.content_types).where(
             models.content_types.c.id == content_type_id
         )
     )
@@ -281,7 +281,7 @@ async def update_content_type(
         raise bad_request_exception()
 
     cr: sa.engine.CursorResult = await conn.execute(
-        models.content_types.select().where(
+        sa.select(models.content_types).where(
             models.content_types.c.id == content_type_id
         )
     )
@@ -315,7 +315,7 @@ async def delete_content_type(
     conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_begin),
 ):
     cr: sa.engine.CursorResult = await conn.execute(
-        models.content_types.select().where(
+        sa.select(models.content_types).where(
             models.content_types.c.id == content_type_id
         )
     )
@@ -350,7 +350,7 @@ async def list_groups(
     take: int | None = Query(default=100, le=100),
     conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_connect),
 ):
-    query = models.groups.select().offset(skip).limit(take)
+    query = sa.select(models.groups).offset(skip).limit(take)
 
     cr: sa.engine.CursorResult = await conn.execute(query)
 
@@ -367,7 +367,7 @@ async def get_group(
     conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_connect),
 ):
     cr: sa.engine.CursorResult = await conn.execute(
-        models.groups.select().where(models.groups.c.id == group_id)
+        sa.select(models.groups).where(models.groups.c.id == group_id)
     )
 
     if group_row := cr.first():
@@ -408,7 +408,7 @@ async def update_group(
         raise bad_request_exception()
 
     cr: sa.engine.CursorResult = await conn.execute(
-        models.groups.select().where(models.groups.c.id == group_id)
+        sa.select(models.groups).where(models.groups.c.id == group_id)
     )
     group_row = cr.first()
 
@@ -440,7 +440,7 @@ async def delete_group(
     conn: sa.ext.asyncio.engine.AsyncConnection = Depends(engine_begin),
 ):
     cr: sa.engine.CursorResult = await conn.execute(
-        models.groups.select().where(models.groups.c.id == group_id)
+        sa.select(models.groups).where(models.groups.c.id == group_id)
     )
 
     if group_row := cr.first():
