@@ -755,14 +755,14 @@ async def list_groups_of_permission(
     return cr.fetchall()
 
 
-@router.post("/permissions/{permission_id}/user/{user_id}")
+@router.post("/permissions/{permission_id}/users/{user_id}")
 async def create_permission_of_user(
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
     return {}
 
 
-@router.delete("/permissions/{permission_id}/user/{user_id}")
+@router.delete("/permissions/{permission_id}/users/{user_id}")
 async def delete_permission_of_user(
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
@@ -776,7 +776,7 @@ async def create_permission_of_group(
     return {}
 
 
-@router.delete("/permissions/{permission_id}/group/{group_id}")
+@router.delete("/permissions/{permission_id}/groups/{group_id}")
 async def delete_permission_of_group(
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
