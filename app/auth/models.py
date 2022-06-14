@@ -58,6 +58,7 @@ users = sa.Table(
     ),
 )
 
+
 groups = sa.Table(
     "auth_group",
     metadata,
@@ -118,8 +119,8 @@ permissions = sa.Table(
             onupdate="CASCADE",
             ondelete="CASCADE",
             deferrable=False,
-            index=True,
         ),
+        index=True,
     ),
     sa.Column(
         "codename",
@@ -146,8 +147,8 @@ group_permissions = sa.Table(
             onupdate="CASCADE",
             ondelete="CASCADE",
             deferrable=False,
-            index=True,
         ),
+        index=True,
     ),
     sa.Column(
         "permission_id",
@@ -157,8 +158,8 @@ group_permissions = sa.Table(
             onupdate="CASCADE",
             ondelete="CASCADE",
             deferrable=False,
-            index=True,
         ),
+        index=True,
     ),
     sa.UniqueConstraint("group_id", "permission_id"),
 )
@@ -181,8 +182,8 @@ user_groups = sa.Table(
             onupdate="CASCADE",
             ondelete="CASCADE",
             deferrable=False,
-            index=True,
         ),
+        index=True,
     ),
     sa.Column(
         "group_id",
@@ -192,8 +193,8 @@ user_groups = sa.Table(
             onupdate="CASCADE",
             ondelete="CASCADE",
             deferrable=False,
-            index=True,
         ),
+        index=True,
     ),
     sa.UniqueConstraint("user_id", "group_id"),
 )
@@ -217,8 +218,8 @@ user_permissions = sa.Table(
             onupdate="CASCADE",
             ondelete="CASCADE",
             deferrable=False,
-            index=True,
         ),
+        index=True,
     ),
     sa.Column(
         "permission_id",
@@ -228,8 +229,8 @@ user_permissions = sa.Table(
             onupdate="CASCADE",
             ondelete="CASCADE",
             deferrable=False,
-            index=True,
         ),
+        index=True,
     ),
     sa.UniqueConstraint("user_id", "permission_id"),
 )
@@ -274,8 +275,8 @@ admin_logs = sa.Table(
             onupdate="CASCADE",
             ondelete="CASCADE",
             deferrable=False,
-            index=True,
         ),
+        index=True,
     ),
     sa.Column(
         "user_id",
@@ -285,8 +286,8 @@ admin_logs = sa.Table(
             onupdate="CASCADE",
             ondelete="CASCADE",
             deferrable=False,
-            index=True,
         ),
+        index=True,
     ),
 )
 
@@ -312,8 +313,8 @@ sessions = sa.Table(
 )
 
 
-admin_logs = sa.Table(
-    "django_admin_log",
+django_migrations = sa.Table(
+    "django_migrations",
     metadata,
     sa.Column(
         "id",

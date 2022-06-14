@@ -15,6 +15,7 @@ Python 3.10 and above
 * fastapi
 * SQLAlchemy[asyncio]
 * asyncpg
+* psycopg2-binary (for alembic)
 * pydantic[dotenv]
 * pydantic[email]
 * uvicorn
