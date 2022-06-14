@@ -81,3 +81,15 @@ class UserGroup(BaseModel):
     id: int | None
     user_id: int
     group_id: int
+
+
+class UserPermission(BaseModel):
+    id: int | None
+    user_id: int
+    permission_id: int
+
+
+class GroupPermission(BaseModel):
+    id: int | None
+    group_id: int
+    permission_id: int

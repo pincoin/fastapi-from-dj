@@ -808,32 +808,112 @@ async def list_groups_of_permission(
     return cr.fetchall()
 
 
-@router.post("/permissions/{permission_id}/users/{user_id}")
+@router.post(
+    "/permissions/{permission_id}/users/{user_id}",
+    status_code=fastapi.status.HTTP_201_CREATED,
+    response_model=schemas.UserPermission,
+)
 async def create_permission_of_user(
+    permission_id: int = fastapi.Query(gt=0),
+    user_id: int = fastapi.Query(gt=0),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
-    return {}
+    user_permission_dict = {
+        "permission_id": permission_id,
+        "user_id": user_id,
+    }
+
+    stmt = models.user_permissions.insert().values(**user_permission_dict)
+
+    try:
+        cr: sa.engine.CursorResult = await conn.execute(stmt)
+        return schemas.UserPermission(
+            **user_permission_dict,
+            id=cr.inserted_primary_key[0],
+        )
+    except sa.exc.IntegrityError:
+        raise exceptions.conflict_exception()
 
 
-@router.delete("/permissions/{permission_id}/users/{user_id}")
+@router.delete(
+    "/permissions/{permission_id}/users/{user_id}",
+    status_code=fastapi.status.HTTP_204_NO_CONTENT,
+    response_class=fastapi.Response,
+)
 async def delete_permission_of_user(
+    permission_id: int = fastapi.Query(gt=0),
+    user_id: int = fastapi.Query(gt=0),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
-    return {}
+    stmt = sa.select(models.user_permissions).where(
+        models.user_permissions.c.user_id == user_id,
+        models.user_permissions.c.permission_id == permission_id,
+    )
+    cr: sa.engine.CursorResult = await conn.execute(stmt)
+
+    if user_permission_row := cr.first():
+        stmt = models.user_permissions.delete().where(
+            models.user_permissions.c.user_id == user_id,
+            models.user_permissions.c.permission_id == permission_id,
+        )
+        await conn.execute(stmt)
+        return None
+
+    raise exceptions.item_not_found_exception("User Permission")
 
 
-@router.post("/permissions/{permission_id}/group/{group_id}")
+@router.post(
+    "/permissions/{permission_id}/group/{group_id}",
+    status_code=fastapi.status.HTTP_201_CREATED,
+    response_model=schemas.GroupPermission,
+)
 async def create_permission_of_group(
+    permission_id: int = fastapi.Query(gt=0),
+    group_id: int = fastapi.Query(gt=0),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
-    return {}
+    group_permission_dict = {
+        "permission_id": permission_id,
+        "group_id": group_id,
+    }
+
+    stmt = models.group_permissions.insert().values(**group_permission_dict)
+
+    try:
+        cr: sa.engine.CursorResult = await conn.execute(stmt)
+        return schemas.UserPermission(
+            **group_permission_dict,
+            id=cr.inserted_primary_key[0],
+        )
+    except sa.exc.IntegrityError:
+        raise exceptions.conflict_exception()
 
 
-@router.delete("/permissions/{permission_id}/groups/{group_id}")
+@router.delete(
+    "/permissions/{permission_id}/groups/{group_id}",
+    status_code=fastapi.status.HTTP_204_NO_CONTENT,
+    response_class=fastapi.Response,
+)
 async def delete_permission_of_group(
+    permission_id: int = fastapi.Query(gt=0),
+    group_id: int = fastapi.Query(gt=0),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
-    return {}
+    stmt = sa.select(models.group_permissions).where(
+        models.group_permissions.c.group_id == group_id,
+        models.group_permissions.c.permission_id == permission_id,
+    )
+    cr: sa.engine.CursorResult = await conn.execute(stmt)
+
+    if group_permissions_row := cr.first():
+        stmt = models.group_permissions.delete().where(
+            models.group_permissions.c.group_id == group_id,
+            models.group_permissions.c.permission_id == permission_id,
+        )
+        await conn.execute(stmt)
+        return None
+
+    raise exceptions.item_not_found_exception("User Permission")
 
 
 @router.get(
