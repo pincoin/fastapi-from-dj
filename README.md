@@ -1,12 +1,13 @@
 # fastapi-from-dj
 This is a FastAPI boilerplate template for quick start.
 
-This project watches the same database schemes installed by Django.
+This project watches the same database schemes which was installed by Django.
 
 This project is based on Python 3.10+ and SQLAlchemy 1.4+ in order to utilize async connections.
 
 ## Features
 * SQLAlchemy Async Core + CRUD on PostgreSQL
+* Alembic migrations
 * OAuth2 + JWT (Django scheme-compatible)
 
 # Getting started
@@ -34,6 +35,18 @@ sqlalchemy_database_uri="postgresql+asyncpg://username:password@host:port/databa
 ```
 
 You can create the `app/production.env` file for production server, and all `.env` files are hidden by `.gitignore`.
+
+## Alembic migrations
+`psycopg2-binary` is required because Alembic works synchronously.
+
+```
+$ mv alembic.ini.sample alembic.ini
+```
+
+Please, change the line as shown below:
+```
+sqlalchemy.url = driver://user:pass@localhost/dbname
+```
 
 ## Run
 ```
