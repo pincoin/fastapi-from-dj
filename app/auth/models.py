@@ -71,6 +71,7 @@ groups = sa.Table(
         "name",
         sa.String(150),
         unique=True,
+        index=True,
     ),
 )
 
@@ -117,6 +118,7 @@ permissions = sa.Table(
             onupdate="CASCADE",
             ondelete="CASCADE",
             deferrable=False,
+            index=True,
         ),
     ),
     sa.Column(
@@ -144,6 +146,7 @@ group_permissions = sa.Table(
             onupdate="CASCADE",
             ondelete="CASCADE",
             deferrable=False,
+            index=True,
         ),
     ),
     sa.Column(
@@ -154,6 +157,7 @@ group_permissions = sa.Table(
             onupdate="CASCADE",
             ondelete="CASCADE",
             deferrable=False,
+            index=True,
         ),
     ),
     sa.UniqueConstraint("group_id", "permission_id"),
@@ -177,6 +181,7 @@ user_groups = sa.Table(
             onupdate="CASCADE",
             ondelete="CASCADE",
             deferrable=False,
+            index=True,
         ),
     ),
     sa.Column(
@@ -187,6 +192,7 @@ user_groups = sa.Table(
             onupdate="CASCADE",
             ondelete="CASCADE",
             deferrable=False,
+            index=True,
         ),
     ),
     sa.UniqueConstraint("user_id", "group_id"),
@@ -211,6 +217,7 @@ user_permissions = sa.Table(
             onupdate="CASCADE",
             ondelete="CASCADE",
             deferrable=False,
+            index=True,
         ),
     ),
     sa.Column(
@@ -221,6 +228,7 @@ user_permissions = sa.Table(
             onupdate="CASCADE",
             ondelete="CASCADE",
             deferrable=False,
+            index=True,
         ),
     ),
     sa.UniqueConstraint("user_id", "permission_id"),
@@ -261,11 +269,68 @@ admin_logs = sa.Table(
     sa.Column(
         "content_type_id",
         sa.BigInteger,
-        sa.ForeignKey("django_content_type.id"),
+        sa.ForeignKey(
+            "django_content_type.id",
+            onupdate="CASCADE",
+            ondelete="SET NULL",
+            deferrable=False,
+            index=True,
+        ),
     ),
     sa.Column(
         "user_id",
         sa.BigInteger,
-        sa.ForeignKey("auth_user.id"),
+        sa.ForeignKey(
+            "auth_user.id",
+            onupdate="CASCADE",
+            ondelete="SET NULL",
+            deferrable=False,
+            index=True,
+        ),
+    ),
+)
+
+
+sessions = sa.Table(
+    "django_session",
+    metadata,
+    sa.Column(
+        "session_key",
+        sa.String(40),
+        primary_key=True,
+        index=True,
+    ),
+    sa.Column(
+        "session_data",
+        sa.String,
+    ),
+    sa.Column(
+        "expire_date",
+        sa.types.TIMESTAMP(timezone=True),
+        index=True,
+    ),
+)
+
+
+admin_logs = sa.Table(
+    "django_admin_log",
+    metadata,
+    sa.Column(
+        "id",
+        sa.BigInteger,
+        primary_key=True,
+        index=True,
+    ),
+    sa.Column(
+        "app",
+        sa.String(255),
+    ),
+    sa.Column(
+        "name",
+        sa.String(255),
+    ),
+    sa.Column(
+        "applied",
+        sa.types.TIMESTAMP(timezone=True),
     ),
 )
