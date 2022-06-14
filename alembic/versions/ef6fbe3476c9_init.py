@@ -5,9 +5,8 @@ Revises:
 Create Date: 2022-06-14 23:49:40.028003
 
 """
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "ef6fbe3476c9"
@@ -129,6 +128,7 @@ def upgrade() -> None:
                 ondelete="CASCADE",
                 deferrable=False,
             ),
+            index=True,
         ),
         sa.Column(
             "codename",
@@ -154,6 +154,7 @@ def upgrade() -> None:
                 ondelete="CASCADE",
                 deferrable=False,
             ),
+            index=True,
         ),
         sa.Column(
             "permission_id",
@@ -164,6 +165,7 @@ def upgrade() -> None:
                 ondelete="CASCADE",
                 deferrable=False,
             ),
+            index=True,
         ),
         sa.UniqueConstraint("group_id", "permission_id"),
     )
@@ -185,6 +187,7 @@ def upgrade() -> None:
                 ondelete="CASCADE",
                 deferrable=False,
             ),
+            index=True,
         ),
         sa.Column(
             "group_id",
@@ -195,6 +198,7 @@ def upgrade() -> None:
                 ondelete="CASCADE",
                 deferrable=False,
             ),
+            index=True,
         ),
         sa.UniqueConstraint("user_id", "group_id"),
     )
@@ -216,6 +220,7 @@ def upgrade() -> None:
                 ondelete="CASCADE",
                 deferrable=False,
             ),
+            index=True,
         ),
         sa.Column(
             "permission_id",
@@ -226,6 +231,7 @@ def upgrade() -> None:
                 ondelete="CASCADE",
                 deferrable=False,
             ),
+            index=True,
         ),
         sa.UniqueConstraint("user_id", "permission_id"),
     )
@@ -269,6 +275,7 @@ def upgrade() -> None:
                 ondelete="CASCADE",
                 deferrable=False,
             ),
+            index=True,
         ),
         sa.Column(
             "user_id",
@@ -279,6 +286,7 @@ def upgrade() -> None:
                 ondelete="CASCADE",
                 deferrable=False,
             ),
+            index=True,
         ),
     )
 
@@ -325,13 +333,13 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_table("auth_group_permissions")
-    op.drop_table("auth_user_groups")
-    op.drop_table("auth_user_user_permissions")
-    op.drop_table("django_admin_log")
-    op.drop_table("django_session")
     op.drop_table("django_migrations")
+    op.drop_table("django_session")
+    op.drop_table("django_admin_log")
+    op.drop_table("auth_user_user_permissions")
+    op.drop_table("auth_user_groups")
+    op.drop_table("auth_group_permissions")
     op.drop_table("auth_permission")
-    op.drop_table("auth_user")
-    op.drop_table("auth_group")
     op.drop_table("django_content_type")
+    op.drop_table("auth_group")
+    op.drop_table("auth_user")
