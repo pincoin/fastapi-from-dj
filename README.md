@@ -60,7 +60,10 @@ Cons
 
 ## FastAPI
 Pros
-* Async/ASGI
+* Async/ASGI - Fast
+* Easy to code and fast learning curve.
+* Data validation via Pydantic
+* Automatic docs(Swagger-UI)
 * Websocket
 
 Cons
