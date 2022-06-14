@@ -649,14 +649,28 @@ async def list_users_of_group(
 @router.post(
     "/groups/{group_id}/users/{user_id}",
     status_code=fastapi.status.HTTP_201_CREATED,
-    # response_model=schemas.UserGroup,
+    response_model=schemas.UserGroup,
 )
 async def create_user_of_group(
     group_id: int = fastapi.Query(gt=0),
     user_id: int = fastapi.Query(gt=0),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
-    return {}
+    user_group_dict = {
+        "user_id": user_id,
+        "group_id": group_id,
+    }
+
+    stmt = models.user_groups.insert().values(**user_group_dict)
+
+    try:
+        cr: sa.engine.CursorResult = await conn.execute(stmt)
+        return schemas.UserGroup(
+            **user_group_dict,
+            id=cr.inserted_primary_key[0],
+        )
+    except sa.exc.IntegrityError:
+        raise exceptions.conflict_exception()
 
 
 @router.delete(
