@@ -272,7 +272,7 @@ admin_logs = sa.Table(
         sa.ForeignKey(
             "django_content_type.id",
             onupdate="CASCADE",
-            ondelete="SET NULL",
+            ondelete="CASCADE",
             deferrable=False,
             index=True,
         ),
@@ -283,7 +283,7 @@ admin_logs = sa.Table(
         sa.ForeignKey(
             "auth_user.id",
             onupdate="CASCADE",
-            ondelete="SET NULL",
+            ondelete="CASCADE",
             deferrable=False,
             index=True,
         ),
