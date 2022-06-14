@@ -68,7 +68,7 @@ async def list_users(
     response_model_exclude={"password"},
 )
 async def get_user(
-    user_id: int | None = fastapi.Query(default=0, gt=0),
+    user_id: int = fastapi.Query(gt=0),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
     stmt = sa.select(models.users).where(models.users.c.id == user_id)
@@ -124,7 +124,7 @@ async def create_user(
 )
 async def update_user(
     user: schemas.UserUpdate,
-    user_id: int | None = fastapi.Query(default=0, gt=0),
+    user_id: int = fastapi.Query(gt=0),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
     # 1. Create user input dict from user input json (excludes fields unset)
@@ -171,7 +171,7 @@ async def update_user(
     response_class=fastapi.Response,
 )
 async def delete_user(
-    user_id: int | None = fastapi.Query(default=0, gt=0),
+    user_id: int = fastapi.Query(gt=0),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
     stmt = sa.select(models.users).where(models.users.c.id == user_id)
@@ -270,7 +270,7 @@ async def list_content_types(
     response_model=schemas.ContentType,
 )
 async def get_content_type(
-    content_type_id: int | None = fastapi.Query(default=0, gt=0),
+    content_type_id: int = fastapi.Query(default=0, gt=0),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
     stmt = sa.select(models.content_types).where(
@@ -313,7 +313,7 @@ async def create_content_type(
 )
 async def update_content_type(
     content_type: schemas.ContentTypeUpdate,
-    content_type_id: int | None = fastapi.Query(default=0, gt=0),
+    content_type_id: int = fastapi.Query(default=0, gt=0),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
     content_type_dict = content_type.dict(exclude_unset=True)
@@ -355,7 +355,7 @@ async def update_content_type(
     response_class=fastapi.Response,
 )
 async def delete_content_type(
-    content_type_id: int | None = fastapi.Query(default=0, gt=0),
+    content_type_id: int = fastapi.Query(default=0, gt=0),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
     stmt = sa.select(models.content_types).where(
@@ -524,7 +524,7 @@ async def list_groups(
     response_model=schemas.Group,
 )
 async def get_group(
-    group_id: int | None = fastapi.Query(default=0, gt=0),
+    group_id: int = fastapi.Query(default=0, gt=0),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
     stmt = sa.select(models.groups).where(models.groups.c.id == group_id)
@@ -564,7 +564,7 @@ async def create_group(
 )
 async def update_group(
     group: schemas.GroupUpdate,
-    group_id: int | None = fastapi.Query(default=0, gt=0),
+    group_id: int = fastapi.Query(default=0, gt=0),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
     group_dict = group.dict(exclude_unset=True)
@@ -604,7 +604,7 @@ async def update_group(
     response_class=fastapi.Response,
 )
 async def delete_group(
-    group_id: int | None = fastapi.Query(default=0, gt=0),
+    group_id: int = fastapi.Query(default=0, gt=0),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
     stmt = sa.select(models.groups).where(models.groups.c.id == group_id)
@@ -731,7 +731,7 @@ async def list_permissions(
     response_model=schemas.Permission,
 )
 async def get_permission(
-    permission_id: int | None = fastapi.Query(default=0, gt=0),
+    permission_id: int = fastapi.Query(default=0, gt=0),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
     stmt = (
