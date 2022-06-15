@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     port: int = 8000
 
     secret_key: str = Field(min_length=32)
+    jwt_algorithm: str = "HS256"
 
     sqlalchemy_database_uri: PostgresDsn
 

@@ -1,21 +1,37 @@
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 
 
 def bad_request_exception():
-    return HTTPException(status_code=400, detail="Bad Request")
+    return HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="Bad Request",
+    )
 
 
-def unauthorized_exception():
-    return HTTPException(status_code=401, detail="Invalid Authentication")
+def invalid_credentials_exception():
+    return HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Invalid username or password",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
 
 
 def forbidden_exception():
-    return HTTPException(status_code=403, detail="Forbidden")
+    return HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Forbidden",
+    )
 
 
 def item_not_found_exception(item):
-    return HTTPException(status_code=404, detail=f"{item} Not Found")
+    return HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail=f"{item} Not Found",
+    )
 
 
 def conflict_exception():
-    return HTTPException(status_code=409, detail="Integrity error")
+    return HTTPException(
+        status_code=status.HTTP_409_CONFLICT,
+        detail="Integrity error",
+    )

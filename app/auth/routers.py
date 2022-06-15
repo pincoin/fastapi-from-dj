@@ -1,14 +1,12 @@
-from datetime import datetime, timezone
+import datetime
 
-import asyncpg
 import fastapi
 import sqlalchemy as sa
 from conf import config, exceptions
 from conf.dependencies import engine_begin, engine_connect
-from fastapi.encoders import jsonable_encoder
 
 from . import models, schemas
-from .utils import Pbkdf2Sha256Hasher
+from .utils import Authentication, Pbkdf2Sha256Hasher
 
 settings = config.get_settings()
 
@@ -21,14 +19,27 @@ router = fastapi.APIRouter(
 )
 
 
-@router.post("/login")
-async def login():
-    return {}
+@router.post("/token")
+async def login_for_access_token(
+    form_data: fastapi.security.OAuth2PasswordRequestForm = fastapi.Depends(),
+    conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
+):
+    user_dict = await Authentication.authenticate_user(
+        form_data.username,
+        form_data.password,
+        conn,
+    )
 
+    if not user_dict:
+        raise exceptions.invalid_credentials_exception()
 
-@router.post("/logout")
-async def logout():
-    return {}
+    token_expires = datetime.timedelta(minutes=30)
+    token = Authentication.create_access_token(
+        user_dict["username"],
+        user_dict["id"],
+        expires_delta=token_expires,
+    )
+    return {"token": token}
 
 
 @router.get(
@@ -91,9 +102,7 @@ async def create_user(
     user: schemas.UserCreate,
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
-    salt = Pbkdf2Sha256Hasher.salt()
-    hash = Pbkdf2Sha256Hasher.hasher(user.password, salt)
-    hashed_password = Pbkdf2Sha256Hasher.encode(hash, salt)
+    hashed_password = Pbkdf2Sha256Hasher.get_hashed_password(user.password)
 
     user_dict = user.dict() | {
         "password": hashed_password,
@@ -160,7 +169,7 @@ async def update_user(
         await conn.execute(stmt)
 
         # 6. Encode pydantic model into JSON
-        return jsonable_encoder(user_model_new)
+        return fastapi.encoders.jsonable_encoder(user_model_new)
     except sa.exc.IntegrityError:
         raise exceptions.conflict_exception()
 
@@ -344,7 +353,7 @@ async def update_content_type(
 
     try:
         await conn.execute(stmt)
-        return jsonable_encoder(content_type_model_new)
+        return fastapi.encoders.jsonable_encoder(content_type_model_new)
     except sa.exc.IntegrityError:
         raise exceptions.conflict_exception()
 
@@ -469,7 +478,7 @@ async def update_permission_of_content_type(
 
     try:
         await conn.execute(stmt)
-        return jsonable_encoder(permission_model_new)
+        return fastapi.encoders.jsonable_encoder(permission_model_new)
     except sa.exc.IntegrityError:
         raise exceptions.conflict_exception()
 
@@ -593,7 +602,7 @@ async def update_group(
 
     try:
         await conn.execute(stmt)
-        return jsonable_encoder(group_model_new)
+        return fastapi.encoders.jsonable_encoder(group_model_new)
     except sa.exc.IntegrityError:
         raise exceptions.conflict_exception()
 

@@ -19,6 +19,8 @@ Python 3.10 and above
 * psycopg2-binary (for alembic)
 * pydantic[dotenv]
 * pydantic[email]
+* python-multipart
+* python-jose[cryptography]
 * uvicorn
 * alembic
 * uvicorn
@@ -31,6 +33,7 @@ app_name="FastAPI from Django"
 debug=True
 uvicorn_reload=True
 secret_key="Minimum-length-32-secret-key-string"
+jwt_algorithm="HS256"
 sqlalchemy_database_uri="postgresql+asyncpg://username:password@host:port/database"
 ```
 

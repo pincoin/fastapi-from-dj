@@ -1,29 +1,24 @@
-import abc
 import base64
+import datetime
 import hashlib
 import math
 import secrets
+import typing
+
+import fastapi
+import sqlalchemy as sa
+from conf import config
+from conf.exceptions import invalid_credentials_exception
+from jose import JWTError, jwt
+
+from . import models
+
+settings = config.get_settings()
+
+oauth2_scheme = fastapi.security.OAuth2PasswordBearer(tokenUrl="token")
 
 
-class Hasher(metaclass=abc.ABCMeta):
-    @abc.abstractstaticmethod
-    def salt():
-        pass
-
-    @abc.abstractstaticmethod
-    def hasher():
-        pass
-
-    @abc.abstractstaticmethod
-    def encode():
-        pass
-
-    @abc.abstractstaticmethod
-    def decode():
-        pass
-
-
-class Pbkdf2Sha256Hasher(Hasher):
+class Pbkdf2Sha256Hasher:
     RANDOM_STRING_CHARS = (
         "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
     )
@@ -32,12 +27,7 @@ class Pbkdf2Sha256Hasher(Hasher):
     iterations = 320000
 
     @staticmethod
-    def salt():
-        """Returns salt from random string (alphanumeric 22 chars).
-
-        Returns:
-            str: salt
-        """
+    def salt() -> str:
         # random string (alphanumeric 22 chars)
         char_count = math.ceil(
             128 / math.log2(len(Pbkdf2Sha256Hasher.RANDOM_STRING_CHARS))
@@ -48,16 +38,7 @@ class Pbkdf2Sha256Hasher(Hasher):
         )
 
     @staticmethod
-    def hasher(plain, salt):
-        """Returns encrypted password from plain password and salt.
-
-        Args:
-            plain (str): plain password text
-            salt (str): salt
-
-        Returns:
-            str: encrypted password
-        """
+    def hasher(plain: str, salt: str) -> str:
         hash = hashlib.pbkdf2_hmac(
             hashlib.sha256().name,  # 'sha256',
             plain.encode(),  # bytecode
@@ -69,29 +50,11 @@ class Pbkdf2Sha256Hasher(Hasher):
         return hash
 
     @staticmethod
-    def encode(hash, salt):
-        """Returns one string concatenated with hash algorithm, iterations, hash and salt.
-        The encoded text is seprated by $ character.
-
-        Args:
-            hash (bool): hashed password
-            salt (str): salt
-
-        Returns:
-            _type_: encoded string to save as a field in database
-        """
+    def encode(hash: str, salt: str) -> str:
         return f"{Pbkdf2Sha256Hasher.algorithm}${Pbkdf2Sha256Hasher.iterations}${salt}${hash}"
 
     @staticmethod
-    def decode(encoded):
-        """Retruns decoded database value
-
-        Args:
-            encoded (str): encoded text
-
-        Returns:
-            dict: The result contains `algorithm`, `hash`, `iterations` and `salt`
-        """
+    def decode(encoded: str) -> dict:
         algorithm, iterations, salt, hash = encoded.split("$", 3)
         return {
             "algorithm": algorithm,
@@ -99,3 +62,87 @@ class Pbkdf2Sha256Hasher(Hasher):
             "iterations": int(iterations),
             "salt": salt,
         }
+
+    @staticmethod
+    def get_hashed_password(plain: str) -> str:
+        salt = Pbkdf2Sha256Hasher.salt()
+        hash = Pbkdf2Sha256Hasher.hasher(plain, salt)
+        hashed_password = Pbkdf2Sha256Hasher.encode(hash, salt)
+        return hashed_password
+
+    @staticmethod
+    def verify_password(plain: str, encoded: str) -> bool:
+        decoded = Pbkdf2Sha256Hasher.decode(encoded)
+        hashed = Pbkdf2Sha256Hasher.hasher(plain, decoded["salt"])
+
+        if hashed == decoded["hash"]:
+            return True
+
+        return False
+
+
+class Authentication:
+    @staticmethod
+    async def authenticate_user(
+        username: str,
+        password: str,
+        conn: sa.ext.asyncio.engine.AsyncConnection,
+    ) -> dict | None:
+        stmt = sa.select(models.users).where(models.users.c.username == username)
+
+        cr: sa.engine.CursorResult = await conn.execute(stmt)
+
+        user_row = cr.first()
+
+        if not user_row:
+            return False
+
+        user_dict = user_row._mapping
+
+        if not Pbkdf2Sha256Hasher.verify_password(password, user_dict["password"]):
+            return False
+
+        return user_dict
+
+    @staticmethod
+    def create_access_token(
+        username: str,
+        user_id: int,
+        expires_delta: datetime.timedelta | None,
+    ) -> typing.Any:
+        expire = (
+            datetime.datetime.utcnow() + expires_delta
+            if expires_delta
+            else datetime.datetime.utcnow() + datetime.timedelta(minutes=15)
+        )
+
+        payload = {
+            "sub": username,
+            "id": user_id,
+            "exp": expire,
+        }
+
+        return jwt.encode(
+            payload,
+            settings.secret_key,
+            algorithm=settings.jwt_algorithm,
+        )
+
+    @staticmethod
+    async def get_current_user(token: str = fastapi.Depends(oauth2_scheme)):
+        try:
+            payload = jwt.decode(
+                token,
+                settings.secret_key,
+                algorithms=[settings.jwt_algorithm],
+            )
+
+            username: str = payload.get("sub")
+            user_id: int = payload.get("id")
+
+            if username is None or user_id is None:
+                raise invalid_credentials_exception()
+
+            return {"username": username, "id": user_id}
+        except JWTError:
+            raise invalid_credentials_exception()
