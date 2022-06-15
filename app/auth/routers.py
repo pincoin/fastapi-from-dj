@@ -3,7 +3,7 @@ import datetime
 import fastapi
 import sqlalchemy as sa
 from conf import config, exceptions
-from conf.dependencies import engine_begin, engine_connect
+from conf.dependencies import engine_begin, engine_connect, get_current_user
 
 from . import models, schemas
 from .utils import Authentication, Pbkdf2Sha256Hasher
@@ -54,8 +54,12 @@ async def list_users(
     is_active: bool | None = True,
     is_staff: bool | None = False,
     is_superuser: bool | None = False,
+    current_user: dict = fastapi.Depends(get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
+    if current_user is None:
+        raise exceptions.forbidden_exception()
+
     stmt = sa.select(models.users)
 
     if is_active:
