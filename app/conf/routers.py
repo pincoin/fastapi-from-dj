@@ -1,7 +1,6 @@
 from fastapi import APIRouter
 
 from .config import get_settings
-from .database import metadata
 
 settings = get_settings()
 

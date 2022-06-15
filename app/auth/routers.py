@@ -3,9 +3,10 @@ import datetime
 import fastapi
 import sqlalchemy as sa
 from conf import config, exceptions
-from conf.dependencies import engine_begin, engine_connect, get_current_user
+from conf.dependencies import engine_begin, engine_connect
 
 from . import models, schemas
+from .dependencies import get_current_user
 from .utils import Authentication, Pbkdf2Sha256Hasher
 
 settings = config.get_settings()
