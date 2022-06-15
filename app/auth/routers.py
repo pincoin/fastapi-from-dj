@@ -109,7 +109,7 @@ async def create_user(
         "is_active": True,
         "is_staff": False,
         "is_superuser": False,
-        "date_joined": datetime.now(timezone.utc),
+        "date_joined": datetime.datetime.utcnow(),
         "last_login": None,
     }
 
