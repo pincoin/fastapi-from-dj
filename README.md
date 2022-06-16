@@ -37,7 +37,9 @@ jwt_algorithm="HS256"
 sqlalchemy_database_uri="postgresql+asyncpg://username:password@host:port/database"
 ```
 
-You may create the `app/production.env` separate file for the production server, and all `.env` files are hidden by `.gitignore`.
+You may create the `app/production.env` separate file for the production server, and you can run server by setting environment variable `ENV_STATE=production`.
+
+All `*.env` files are hidden for security by `.gitignore`.
 
 ## Alembic migrations
 `psycopg2-binary` is required because Alembic works synchronously.
@@ -52,14 +54,33 @@ sqlalchemy.url = driver://user:pass@localhost/dbname
 ```
 
 ## Run
+You can simply run like this:
 ```
-$ python app/main.py
+$ cd app/
+$ python main.py
 ```
 
 SQLAlchemy 2.0 migration must be considered for consistent development process, so you may enable all of SQLAlchemy future deprecation warnings as follows:
 
 ```
-$ SQLALCHEMY_WARN_20=1 python -W always::DeprecationWarning app/main.py
+$ cd app/
+$ SQLALCHEMY_WARN_20=1 python -W always::DeprecationWarning main.py
+```
+
+You can run FastAPI app using `uvicorn`:
+
+```
+$ cd app/
+$ uvicorn main:app --reload
+```
+
+Of course, you can change the service port with `--port` option.
+
+You can specify the `env` file by setting environment variable:
+
+```
+$ cd app/
+$ ENV=local python main.py
 ```
 
 # Django or FastAPI
