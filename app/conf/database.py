@@ -4,7 +4,6 @@ from sqlalchemy import MetaData
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from .config import get_settings
-from .utils import Singleton
 
 settings = get_settings()
 

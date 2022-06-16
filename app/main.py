@@ -3,6 +3,7 @@ from fastapi import FastAPI
 
 import auth
 import conf
+import home
 
 app = FastAPI()
 
@@ -21,7 +22,7 @@ async def shutdown():
 
 
 app.include_router(auth.routers.router)
-app.include_router(conf.routers.router)
+app.include_router(home.routers.router)
 
 
 if __name__ == "__main__":
