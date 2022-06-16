@@ -666,6 +666,32 @@ async def list_users_of_group(
     return cr.fetchall()
 
 
+@router.get(
+    "/users/{user_id}/permissions",
+    status_code=fastapi.status.HTTP_200_OK,
+    response_model=list[schemas.Permission],
+)
+async def list_permissions_of_group(
+    group_id: int = fastapi.Query(gt=0),
+    skip: int | None = fastapi.Query(default=0, ge=0),
+    take: int | None = fastapi.Query(default=100, le=100),
+    conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
+):
+    stmt = (
+        sa.select(models.permissions)
+        .join_from(
+            models.permissions,
+            models.group_permissions,
+        )
+        .where(models.group_permissions.c.group_id == group_id)
+    )
+    stmt = stmt.offset(skip).limit(take)
+
+    cr: sa.engine.CursorResult = await conn.execute(stmt)
+
+    return cr.fetchall()
+
+
 @router.post(
     "/groups/{group_id}/users/{user_id}",
     status_code=fastapi.status.HTTP_201_CREATED,
