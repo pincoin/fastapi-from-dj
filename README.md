@@ -32,12 +32,12 @@ Python 3.10 and above
 app_name="FastAPI from Django"
 debug=True
 uvicorn_reload=True
-secret_key="Minimum-length-32-secret-key-string"
+secret_key="Minimum-length-32-secret-key-string-for-HS256"
 jwt_algorithm="HS256"
 sqlalchemy_database_uri="postgresql+asyncpg://username:password@host:port/database"
 ```
 
-You can create the `app/production.env` file for production server, and all `.env` files are hidden by `.gitignore`.
+You may create the `app/production.env` separate file for the production server, and all `.env` files are hidden by `.gitignore`.
 
 ## Alembic migrations
 `psycopg2-binary` is required because Alembic works synchronously.
@@ -56,18 +56,18 @@ sqlalchemy.url = driver://user:pass@localhost/dbname
 $ python app/main.py
 ```
 
-SQLAlchemy 2.0 migration must be considered for consistent development, so you may enable all of SQLAlchemy warings as follows:
+SQLAlchemy 2.0 migration must be considered for consistent development process, so you may enable all of SQLAlchemy future deprecation warnings as follows:
 
 ```
 $ SQLALCHEMY_WARN_20=1 python -W always::DeprecationWarning app/main.py
 ```
 
 # Django or FastAPI
-I decided to run Django and FastAPI servers because of the following reasons:
+I decided to run both Django and FastAPI servers because of the following reasons:
 
 ## Django
 Pros
-* All-in-one framework with a rich of 3rd party libraries in django-ecosystem
+* All-in-one framework with great 3rd party libraries in django-ecosystem
 * Django ORM and Admin page
 
 Cons
