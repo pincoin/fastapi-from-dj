@@ -84,7 +84,10 @@ class Authentication:
         password: str,
         conn: sa.ext.asyncio.engine.AsyncConnection,
     ) -> dict | None:
-        stmt = sa.select(models.users).where(models.users.c.username == username)
+        stmt = sa.select(models.users).where(
+            models.users.c.username == username,
+            models.users.c.is_active == True,
+        )
 
         cr: sa.engine.CursorResult = await conn.execute(stmt)
 
