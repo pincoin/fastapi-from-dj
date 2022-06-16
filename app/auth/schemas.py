@@ -93,3 +93,8 @@ class GroupPermission(BaseModel):
     id: int | None
     group_id: int
     permission_id: int
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str

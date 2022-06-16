@@ -20,7 +20,10 @@ router = fastapi.APIRouter(
 )
 
 
-@router.post("/token")
+@router.post(
+    "/token",
+    response_model=schemas.Token,
+)
 async def login_for_access_token(
     form_data: fastapi.security.OAuth2PasswordRequestForm = fastapi.Depends(),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
@@ -34,13 +37,16 @@ async def login_for_access_token(
     if not user_dict:
         raise exceptions.invalid_credentials_exception()
 
-    token_expires = datetime.timedelta(minutes=30)
-    token = Authentication.create_access_token(
+    access_token_expires = datetime.timedelta(minutes=30)
+    access_token = Authentication.create_access_token(
         user_dict["username"],
         user_dict["id"],
-        expires_delta=token_expires,
+        expires_delta=access_token_expires,
     )
-    return {"token": token}
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+    }
 
 
 @router.get(
