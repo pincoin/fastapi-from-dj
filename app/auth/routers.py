@@ -2,8 +2,8 @@ import datetime
 
 import fastapi
 import sqlalchemy as sa
-from conf import config, exceptions
-from conf.dependencies import engine_begin, engine_connect
+from core import config, exceptions
+from core.dependencies import engine_begin, engine_connect
 
 from . import models, schemas
 from .dependencies import get_current_user

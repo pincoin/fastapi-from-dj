@@ -2,13 +2,13 @@ import uvicorn
 from fastapi import FastAPI
 
 import auth
-import conf
+import core
 import home
 
 app = FastAPI()
 
 
-settings = conf.config.get_settings()
+settings = core.config.get_settings()
 
 
 @app.on_event("startup")

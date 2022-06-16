@@ -1,6 +1,6 @@
 import typing
 
-from conf import config
+from core import config
 
 from .database import engine
 

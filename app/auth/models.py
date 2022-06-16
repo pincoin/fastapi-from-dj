@@ -1,5 +1,5 @@
 import sqlalchemy as sa
-from conf.database import metadata
+from core.database import metadata
 
 users = sa.Table(
     "auth_user",

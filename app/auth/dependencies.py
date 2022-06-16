@@ -1,6 +1,6 @@
 import fastapi
-from conf import config
-from conf.exceptions import invalid_credentials_exception
+from core import config
+from core.exceptions import invalid_credentials_exception
 from jose import JWTError, jwt
 
 settings = config.get_settings()

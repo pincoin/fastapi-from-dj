@@ -1,4 +1,4 @@
-from conf.config import get_settings
+from core.config import get_settings
 from fastapi import APIRouter
 
 settings = get_settings()

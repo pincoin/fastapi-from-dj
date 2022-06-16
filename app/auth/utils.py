@@ -6,7 +6,7 @@ import secrets
 import typing
 
 import sqlalchemy as sa
-from conf import config
+from core import config
 from jose import jwt
 
 from . import models
