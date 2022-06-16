@@ -77,9 +77,9 @@ class Pbkdf2Sha256Hasher:
         return False
 
 
-class Authentication:
+class AuthenticationBackend:
     @staticmethod
-    async def authenticate_user(
+    async def authenticate(
         username: str,
         password: str,
         conn: sa.ext.asyncio.engine.AsyncConnection,
@@ -109,11 +109,10 @@ class Authentication:
         user_id: int,
         expires_delta: datetime.timedelta | None,
     ) -> typing.Any:
-        expire = (
-            datetime.datetime.utcnow() + expires_delta
-            if expires_delta
-            else datetime.datetime.utcnow() + datetime.timedelta(minutes=15)
-        )
+        if expires_delta:
+            expire = datetime.datetime.utcnow() + expires_delta
+        else:
+            expire = datetime.datetime.utcnow() + datetime.timedelta(minutes=15)
 
         payload = {
             "sub": username,

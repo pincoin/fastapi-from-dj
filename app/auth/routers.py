@@ -7,7 +7,7 @@ from conf.dependencies import engine_begin, engine_connect
 
 from . import models, schemas
 from .dependencies import get_current_user
-from .utils import Authentication, Pbkdf2Sha256Hasher
+from .utils import AuthenticationBackend, Pbkdf2Sha256Hasher
 
 settings = config.get_settings()
 
@@ -28,7 +28,7 @@ async def login_for_access_token(
     form_data: fastapi.security.OAuth2PasswordRequestForm = fastapi.Depends(),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
-    user_dict = await Authentication.authenticate_user(
+    user_dict = await AuthenticationBackend.authenticate(
         form_data.username,
         form_data.password,
         conn,
@@ -38,7 +38,7 @@ async def login_for_access_token(
         raise exceptions.invalid_credentials_exception()
 
     access_token_expires = datetime.timedelta(minutes=30)
-    access_token = Authentication.create_access_token(
+    access_token = AuthenticationBackend.create_access_token(
         user_dict["username"],
         user_dict["id"],
         expires_delta=access_token_expires,
