@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from sqlalchemy import MetaData
+import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from .config import get_settings
@@ -20,7 +20,7 @@ engine = create_async_engine(
 
 @lru_cache(maxsize=1)
 def get_metadata():
-    return MetaData()
+    return sa.MetaData()
 
 
 metadata = get_metadata()

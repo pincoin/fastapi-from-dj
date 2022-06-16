@@ -1,6 +1,5 @@
-from fastapi import APIRouter
-
 from conf.config import get_settings
+from fastapi import APIRouter
 
 settings = get_settings()
 
