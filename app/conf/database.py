@@ -1,3 +1,5 @@
+from functools import lru_cache
+
 from sqlalchemy import MetaData
 from sqlalchemy.ext.asyncio import create_async_engine
 
@@ -17,8 +19,9 @@ engine = create_async_engine(
 )
 
 
-class MetaDataSingleton(MetaData, Singleton):
-    pass
+@lru_cache(maxsize=1)
+def get_metadata():
+    return MetaData()
 
 
-metadata = MetaDataSingleton()
+metadata = get_metadata()
