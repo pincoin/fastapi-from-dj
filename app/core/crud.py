@@ -1,4 +1,5 @@
 import sqlalchemy as sa
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio.engine import AsyncConnection
 
 from . import exceptions
@@ -44,17 +45,16 @@ class CRUDModel:
     async def update_or_failure(
         self,
         dict_in,
-        model_class,
+        schema: BaseModel,
         table,
         where,
-        item: str = "Item",
     ):
         # 1. Fetch saved row from database
         stmt = sa.select(table).where(where)
-        row = await CRUDModel(self.conn).get_one_or_404(stmt, item)
+        row = await CRUDModel(self.conn).get_one_or_404(stmt, schema.Config().title)
 
         # 2. Create pydantic model instance from fetched row dict
-        model = model_class(**row._mapping)
+        model = schema(**row._mapping)
 
         # 3. Create NEW pydantic model from user_model + user_dict
         model_new = model.copy(update=dict_in)

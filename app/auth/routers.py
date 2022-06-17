@@ -151,7 +151,6 @@ async def update_user(
             schemas.User,
             models.users,
             models.users.c.id == user_id,
-            "User",
         )
         return fastapi.encoders.jsonable_encoder(user_model)
     except sa.exc.IntegrityError:
@@ -301,7 +300,6 @@ async def update_content_type(
             schemas.ContentType,
             models.content_types,
             models.content_types.c.id == content_type_id,
-            "Content Type",
         )
         return fastapi.encoders.jsonable_encoder(content_type_model)
     except sa.exc.IntegrityError:
@@ -401,7 +399,6 @@ async def update_permission_of_content_type(
             schemas.Permission,
             models.permissions,
             models.permissions.c.id == permission_id,
-            "Permission",
         )
         return fastapi.encoders.jsonable_encoder(permission_model)
     except sa.exc.IntegrityError:
@@ -497,7 +494,6 @@ async def update_group(
             schemas.Group,
             models.groups,
             models.groups.c.id == group_id,
-            "Group",
         )
         return fastapi.encoders.jsonable_encoder(group_model)
     except sa.exc.IntegrityError:

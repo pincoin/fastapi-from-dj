@@ -34,6 +34,9 @@ class User(BaseModel):
     last_login: datetime | None = None
     date_joined: datetime
 
+    class Config:
+        title = "User"
+
 
 class GroupCreate(BaseModel):
     name: str = Field(max_length=150)
@@ -45,6 +48,9 @@ class GroupUpdate(BaseModel):
 
 class Group(GroupCreate):
     id: int | None
+
+    class Config:
+        title = "Group"
 
 
 class ContentTypeCreate(BaseModel):
@@ -59,6 +65,9 @@ class ContentTypeUpdate(BaseModel):
 
 class ContentType(ContentTypeCreate):
     id: int | None
+
+    class Config:
+        title = "Content Type"
 
 
 class PermissionCreate(BaseModel):
@@ -76,11 +85,17 @@ class PermissionUpdate(BaseModel):
 class Permission(PermissionCreate):
     id: int | None
 
+    class Config:
+        title = "Permission"
+
 
 class UserGroup(BaseModel):
     id: int | None
     user_id: int
     group_id: int
+
+    class Config:
+        title = "User Group"
 
 
 class UserPermission(BaseModel):
@@ -88,11 +103,17 @@ class UserPermission(BaseModel):
     user_id: int
     permission_id: int
 
+    class Config:
+        title = "User Permission"
+
 
 class GroupPermission(BaseModel):
     id: int | None
     group_id: int
     permission_id: int
+
+    class Config:
+        title = "Group Permission"
 
 
 class Token(BaseModel):
