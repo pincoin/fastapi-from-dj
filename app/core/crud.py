@@ -30,5 +30,10 @@ class CRUDModel:
     async def update(self, statement):
         pass
 
-    async def delete(self, statement):
-        await self.conn.execute(statement)
+    async def delete_one_or_404(self, statement, item: str = "Item"):
+        cr: sa.engine.CursorResult = await self.conn.execute(statement)
+
+        if cr.rowcount > 0:
+            return None
+
+        raise exceptions.item_not_found_exception(item)

@@ -187,16 +187,8 @@ async def delete_user(
     user_id: int = fastapi.Query(gt=0),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
-    stmt = sa.select(models.users).where(models.users.c.id == user_id)
-
-    cr: sa.engine.CursorResult = await conn.execute(stmt)
-
-    if user_row := cr.first():
-        stmt = models.users.delete().where(models.users.c.id == user_id)
-        await conn.execute(stmt)
-        return None
-
-    raise exceptions.item_not_found_exception("User")
+    stmt = models.users.delete().where(models.users.c.id == user_id)
+    await CRUDModel(conn).delete_one_or_404(stmt, "User")
 
 
 @router.get(
@@ -360,19 +352,10 @@ async def delete_content_type(
     content_type_id: int = fastapi.Query(default=0, gt=0),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
-    stmt = sa.select(models.content_types).where(
+    stmt = models.content_types.delete().where(
         models.content_types.c.id == content_type_id
     )
-    cr: sa.engine.CursorResult = await conn.execute(stmt)
-
-    if content_type_row := cr.first():
-        stmt = models.content_types.delete().where(
-            models.content_types.c.id == content_type_id
-        )
-        await conn.execute(stmt)
-        return None
-
-    raise exceptions.item_not_found_exception("Content Type")
+    await CRUDModel(conn).delete_one_or_404(stmt, "Content Type")
 
 
 @router.get(
@@ -484,21 +467,11 @@ async def delete_permission_of_content_type(
     permission_id: int = fastapi.Query(gt=0),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
-    stmt = sa.select(models.permissions).where(
+    stmt = models.permissions.delete().where(
         models.permissions.c.id == permission_id,
         models.permissions.c.content_type_id == content_type_id,
     )
-    cr: sa.engine.CursorResult = await conn.execute(stmt)
-
-    if content_type_row := cr.first():
-        stmt = models.permissions.delete().where(
-            models.permissions.c.id == permission_id,
-            models.permissions.c.content_type_id == content_type_id,
-        )
-        await conn.execute(stmt)
-        return None
-
-    raise exceptions.item_not_found_exception("Permission")
+    await CRUDModel(conn).delete_one_or_404(stmt, "Permission")
 
 
 @router.get(
@@ -602,16 +575,8 @@ async def delete_group(
     group_id: int = fastapi.Query(default=0, gt=0),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
-    stmt = sa.select(models.groups).where(models.groups.c.id == group_id)
-
-    cr: sa.engine.CursorResult = await conn.execute(stmt)
-
-    if group_row := cr.first():
-        stmt = models.groups.delete().where(models.groups.c.id == group_id)
-        await conn.execute(stmt)
-        return None
-
-    raise exceptions.item_not_found_exception("Group")
+    stmt = models.groups.delete().where(models.groups.c.id == group_id)
+    await CRUDModel(conn).delete_one_or_404(stmt, "Group")
 
 
 @router.get(
@@ -700,21 +665,11 @@ async def delete_user_of_group(
     user_id: int = fastapi.Query(gt=0),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
-    stmt = sa.select(models.user_groups).where(
+    stmt = models.user_groups.delete().where(
         models.user_groups.c.user_id == user_id,
         models.user_groups.c.group_id == group_id,
     )
-    cr: sa.engine.CursorResult = await conn.execute(stmt)
-
-    if content_type_row := cr.first():
-        stmt = models.user_groups.delete().where(
-            models.user_groups.c.user_id == user_id,
-            models.user_groups.c.group_id == group_id,
-        )
-        await conn.execute(stmt)
-        return None
-
-    raise exceptions.item_not_found_exception("User Group")
+    await CRUDModel(conn).delete_one_or_404(stmt, "User Group")
 
 
 @router.get(
@@ -851,21 +806,11 @@ async def delete_permission_of_user(
     user_id: int = fastapi.Query(gt=0),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
-    stmt = sa.select(models.user_permissions).where(
+    stmt = models.user_permissions.delete().where(
         models.user_permissions.c.user_id == user_id,
         models.user_permissions.c.permission_id == permission_id,
     )
-    cr: sa.engine.CursorResult = await conn.execute(stmt)
-
-    if user_permission_row := cr.first():
-        stmt = models.user_permissions.delete().where(
-            models.user_permissions.c.user_id == user_id,
-            models.user_permissions.c.permission_id == permission_id,
-        )
-        await conn.execute(stmt)
-        return None
-
-    raise exceptions.item_not_found_exception("User Permission")
+    await CRUDModel(conn).delete_one_or_404(stmt, "User Permission")
 
 
 @router.post(
@@ -905,21 +850,11 @@ async def delete_permission_of_group(
     group_id: int = fastapi.Query(gt=0),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
-    stmt = sa.select(models.group_permissions).where(
+    stmt = models.group_permissions.delete().where(
         models.group_permissions.c.group_id == group_id,
         models.group_permissions.c.permission_id == permission_id,
     )
-    cr: sa.engine.CursorResult = await conn.execute(stmt)
-
-    if group_permissions_row := cr.first():
-        stmt = models.group_permissions.delete().where(
-            models.group_permissions.c.group_id == group_id,
-            models.group_permissions.c.permission_id == permission_id,
-        )
-        await conn.execute(stmt)
-        return None
-
-    raise exceptions.item_not_found_exception("User Permission")
+    await CRUDModel(conn).delete_one_or_404(stmt, "Group Permission")
 
 
 @router.get(
