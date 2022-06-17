@@ -5,6 +5,7 @@ import sqlalchemy as sa
 from core import config, exceptions
 from core.crud import CRUDModel
 from core.dependencies import engine_begin, engine_connect
+from core.utils import list_params
 
 from . import models, schemas
 from .dependencies import get_current_user
@@ -57,11 +58,10 @@ async def login_for_access_token(
     response_model_exclude={"password"},
 )
 async def list_users(
-    skip: int | None = fastapi.Query(default=0, ge=0),
-    take: int | None = fastapi.Query(default=100, le=100),
     is_active: bool | None = True,
     is_staff: bool | None = False,
     is_superuser: bool | None = False,
+    params: dict = fastapi.Depends(list_params),
     current_user: dict = fastapi.Depends(get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
@@ -77,7 +77,7 @@ async def list_users(
     if is_superuser:
         stmt = stmt.where(models.users.c.is_superuser == is_superuser)
 
-    stmt = stmt.offset(skip).limit(take)
+    stmt = stmt.offset(params["skip"]).limit(params["take"])
 
     return await CRUDModel(conn).get_all(stmt)
 
@@ -177,8 +177,7 @@ async def delete_user(
 )
 async def list_groups_of_user(
     user_id: int = fastapi.Query(gt=0),
-    skip: int | None = fastapi.Query(default=0, ge=0),
-    take: int | None = fastapi.Query(default=100, le=100),
+    params: dict = fastapi.Depends(list_params),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
     stmt = (
@@ -189,7 +188,7 @@ async def list_groups_of_user(
         )
         .where(models.user_groups.c.user_id == user_id)
     )
-    stmt = stmt.offset(skip).limit(take)
+    stmt = stmt.offset(params["skip"]).limit(params["take"])
 
     return await CRUDModel(conn).get_all(stmt)
 
@@ -201,8 +200,7 @@ async def list_groups_of_user(
 )
 async def list_permissions_of_user(
     user_id: int = fastapi.Query(gt=0),
-    skip: int | None = fastapi.Query(default=0, ge=0),
-    take: int | None = fastapi.Query(default=100, le=100),
+    params: dict = fastapi.Depends(list_params),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
     stmt = (
@@ -213,7 +211,7 @@ async def list_permissions_of_user(
         )
         .where(models.user_permissions.c.user_id == user_id)
     )
-    stmt = stmt.offset(skip).limit(take)
+    stmt = stmt.offset(params["skip"]).limit(params["take"])
 
     return await CRUDModel(conn).get_all(stmt)
 
@@ -224,8 +222,7 @@ async def list_permissions_of_user(
     response_model=list[schemas.ContentType],
 )
 async def list_content_types(
-    skip: int | None = fastapi.Query(default=0, ge=0),
-    take: int | None = fastapi.Query(default=100, le=100),
+    params: dict = fastapi.Depends(list_params),
     app_label: str | None = fastapi.Query(default=None, max_length=100),
     model: str | None = fastapi.Query(default=None, max_length=100),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
@@ -237,7 +234,7 @@ async def list_content_types(
     if model:
         stmt = stmt.where(models.content_types.c.app_label == model)
 
-    stmt = stmt.offset(skip).limit(take)
+    stmt = stmt.offset(params["skip"]).limit(params["take"])
 
     return await CRUDModel(conn).get_all(stmt)
 
@@ -333,8 +330,7 @@ async def delete_content_type(
 )
 async def list_permissions_of_content_type(
     content_type_id: int = fastapi.Query(gt=0),
-    skip: int | None = fastapi.Query(default=0, ge=0),
-    take: int | None = fastapi.Query(default=100, le=100),
+    params: dict = fastapi.Depends(list_params),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
     stmt = (
@@ -348,7 +344,7 @@ async def list_permissions_of_content_type(
         )
         .where(models.content_types.c.id == content_type_id)
     )
-    stmt = stmt.offset(skip).limit(take)
+    stmt = stmt.offset(params["skip"]).limit(params["take"])
 
     return await CRUDModel(conn).get_all(stmt)
 
@@ -434,11 +430,10 @@ async def delete_permission_of_content_type(
     response_model=list[schemas.Group],
 )
 async def list_groups(
-    skip: int | None = fastapi.Query(default=0, ge=0),
-    take: int | None = fastapi.Query(default=100, le=100),
+    params: dict = fastapi.Depends(list_params),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
-    stmt = sa.select(models.groups).offset(skip).limit(take)
+    stmt = sa.select(models.groups).offset(params["skip"]).limit(params["take"])
 
     cr: sa.engine.CursorResult = await conn.execute(stmt)
 
@@ -528,8 +523,7 @@ async def delete_group(
 )
 async def list_users_of_group(
     group_id: int = fastapi.Query(gt=0),
-    skip: int | None = fastapi.Query(default=0, ge=0),
-    take: int | None = fastapi.Query(default=100, le=100),
+    params: dict = fastapi.Depends(list_params),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
     stmt = (
@@ -540,7 +534,7 @@ async def list_users_of_group(
         )
         .where(models.groups.c.id == group_id)
     )
-    stmt = stmt.offset(skip).limit(take)
+    stmt = stmt.offset(params["skip"]).limit(params["take"])
 
     return await CRUDModel(conn).get_all(stmt)
 
@@ -552,8 +546,7 @@ async def list_users_of_group(
 )
 async def list_permissions_of_group(
     group_id: int = fastapi.Query(gt=0),
-    skip: int | None = fastapi.Query(default=0, ge=0),
-    take: int | None = fastapi.Query(default=100, le=100),
+    params: dict = fastapi.Depends(list_params),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
     stmt = (
@@ -564,7 +557,7 @@ async def list_permissions_of_group(
         )
         .where(models.group_permissions.c.group_id == group_id)
     )
-    stmt = stmt.offset(skip).limit(take)
+    stmt = stmt.offset(params["skip"]).limit(params["take"])
 
     return await CRUDModel(conn).get_all(stmt)
 
@@ -618,8 +611,7 @@ async def delete_user_of_group(
     response_model=list[schemas.Permission],
 )
 async def list_permissions(
-    skip: int | None = fastapi.Query(default=0, ge=0),
-    take: int | None = fastapi.Query(default=100, le=100),
+    params: dict = fastapi.Depends(list_params),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
     stmt = sa.select(
@@ -630,7 +622,7 @@ async def list_permissions(
         models.permissions,
         models.content_types,
     )
-    stmt = stmt.offset(skip).limit(take)
+    stmt = stmt.offset(params["skip"]).limit(params["take"])
 
     return await CRUDModel(conn).get_all(stmt)
 
@@ -668,8 +660,7 @@ async def get_permission(
 )
 async def list_users_of_permission(
     permission_id: int = fastapi.Query(gt=0),
-    skip: int | None = fastapi.Query(default=0, ge=0),
-    take: int | None = fastapi.Query(default=100, le=100),
+    params: dict = fastapi.Depends(list_params),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
     stmt = (
@@ -680,7 +671,7 @@ async def list_users_of_permission(
         )
         .where(models.user_permissions.c.permission_id == permission_id)
     )
-    stmt = stmt.offset(skip).limit(take)
+    stmt = stmt.offset(params["skip"]).limit(params["take"])
 
     return await CRUDModel(conn).get_all(stmt)
 
@@ -692,8 +683,7 @@ async def list_users_of_permission(
 )
 async def list_groups_of_permission(
     permission_id: int = fastapi.Query(gt=0),
-    skip: int | None = fastapi.Query(default=0, ge=0),
-    take: int | None = fastapi.Query(default=100, le=100),
+    params: dict = fastapi.Depends(list_params),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
     stmt = (
@@ -704,7 +694,7 @@ async def list_groups_of_permission(
         )
         .where(models.permissions.c.permission_id == permission_id)
     )
-    stmt = stmt.offset(skip).limit(take)
+    stmt = stmt.offset(params["skip"]).limit(params["take"])
 
     return await CRUDModel(conn).get_all(stmt)
 
@@ -802,8 +792,7 @@ async def delete_permission_of_group(
 )
 async def list_content_types_of_permission(
     permission_id: int = fastapi.Query(gt=0),
-    skip: int | None = fastapi.Query(default=0, ge=0),
-    take: int | None = fastapi.Query(default=100, le=100),
+    params: dict = fastapi.Depends(list_params),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
     stmt = (
@@ -814,6 +803,6 @@ async def list_content_types_of_permission(
         )
         .where(models.permissions.c.id == permission_id)
     )
-    stmt = stmt.offset(skip).limit(take)
+    stmt = stmt.offset(params["skip"]).limit(params["take"])
 
     return await CRUDModel(conn).get_all(stmt)
