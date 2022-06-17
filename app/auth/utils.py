@@ -132,7 +132,15 @@ class AuthenticationBackend:
     ):
         # permissions belongs to user
         stmt = (
-            sa.select(models.permissions)
+            sa.select(
+                models.permissions,
+                models.content_types.c.app_label,
+                models.content_types.c.model,
+            )
+            .join_from(
+                models.content_types,
+                models.permissions,
+            )
             .join_from(
                 models.permissions,
                 models.user_permissions,
@@ -140,7 +148,7 @@ class AuthenticationBackend:
             .where(models.user_permissions.c.user_id == user_id)
         )
 
-        return CRUDModel(conn).get_all(stmt)
+        return await CRUDModel(conn).get_all(stmt)
 
     @staticmethod
     async def get_group_permissions(
@@ -149,7 +157,15 @@ class AuthenticationBackend:
     ):
         # permissions belongs to group which belongs to user
         stmt = (
-            sa.select(models.permissions)
+            sa.select(
+                models.permissions,
+                models.content_types.c.app_label,
+                models.content_types.c.model,
+            )
+            .join_from(
+                models.content_types,
+                models.permissions,
+            )
             .join_from(
                 models.permissions,
                 models.group_permissions,
@@ -165,16 +181,63 @@ class AuthenticationBackend:
             .where(models.user_groups.c.user_id == user_id)
         )
 
-        return CRUDModel(conn).get_all(stmt)
+        return await CRUDModel(conn).get_all(stmt)
 
     @staticmethod
     async def get_all_permissions(
         user_id: int,
         conn: sa.ext.asyncio.engine.AsyncConnection,
     ):
-        # caching required
-        # user permissions and group permissions
-        pass
+        # 1. Caching required!
+        # 2. Rules assumption required for tuning
+        # - Rule 1: User-Permission many-to-many relations are disabled.
+        # - Rule 2: Each user has to be a member of a group.
+        # - Rule 3: User-Group relations is one-to-one.
+        stmt1 = (
+            sa.select(
+                models.permissions,
+                models.content_types.c.app_label,
+                models.content_types.c.model,
+            )
+            .join_from(
+                models.content_types,
+                models.permissions,
+            )
+            .join_from(
+                models.permissions,
+                models.user_permissions,
+            )
+            .where(models.user_permissions.c.user_id == user_id)
+        )
+
+        stmt2 = (
+            sa.select(
+                models.permissions,
+                models.content_types.c.app_label,
+                models.content_types.c.model,
+            )
+            .join_from(
+                models.content_types,
+                models.permissions,
+            )
+            .join_from(
+                models.permissions,
+                models.group_permissions,
+            )
+            .join_from(
+                models.group_permissions,
+                models.groups,
+            )
+            .join_from(
+                models.groups,
+                models.user_groups,
+            )
+            .where(models.user_groups.c.user_id == user_id)
+        )
+
+        stmt = sa.union(stmt1, stmt2)
+
+        return await CRUDModel(conn).get_all(stmt)
 
     @staticmethod
     async def has_perm(

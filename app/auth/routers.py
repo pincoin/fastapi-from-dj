@@ -434,10 +434,7 @@ async def list_groups(
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
     stmt = sa.select(models.groups).offset(params["skip"]).limit(params["take"])
-
-    cr: sa.engine.CursorResult = await conn.execute(stmt)
-
-    return cr.fetchall()
+    return await CRUDModel(conn).get_all(stmt)
 
 
 @router.get(
@@ -540,7 +537,7 @@ async def list_users_of_group(
 
 
 @router.get(
-    "/users/{user_id}/permissions",
+    "/groups/{group_id}/permissions",
     status_code=fastapi.status.HTTP_200_OK,
     response_model=list[schemas.Permission],
 )
@@ -608,7 +605,7 @@ async def delete_user_of_group(
 @router.get(
     "/permissions",
     status_code=fastapi.status.HTTP_200_OK,
-    response_model=list[schemas.Permission],
+    response_model=list[schemas.PermissionContentType],
 )
 async def list_permissions(
     params: dict = fastapi.Depends(list_params),
@@ -624,13 +621,15 @@ async def list_permissions(
     )
     stmt = stmt.offset(params["skip"]).limit(params["take"])
 
-    return await CRUDModel(conn).get_all(stmt)
+    return await AuthenticationBackend.get_all_permissions(
+        4, conn
+    )  # CRUDModel(conn).get_all(stmt)
 
 
 @router.get(
     "/permissions/{permission_id}",
     status_code=fastapi.status.HTTP_200_OK,
-    response_model=schemas.Permission,
+    response_model=schemas.UserPermission,
 )
 async def get_permission(
     permission_id: int = fastapi.Query(default=0, gt=0),

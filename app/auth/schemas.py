@@ -89,6 +89,10 @@ class Permission(PermissionCreate):
         title = "Permission"
 
 
+class PermissionContentType(Permission, ContentTypeCreate):
+    pass
+
+
 class UserGroup(BaseModel):
     id: int | None
     user_id: int
