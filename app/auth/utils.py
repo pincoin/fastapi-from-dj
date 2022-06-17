@@ -242,11 +242,11 @@ class AuthenticationBackend:
     @staticmethod
     async def has_perm(
         user_id: int,
-        perm,
+        permission_id: int,
         conn: sa.ext.asyncio.engine.AsyncConnection,
     ):
-        # member test
-        pass
+        perms = await AuthenticationBackend.get_all_permissions(user_id, conn)
+        return any(d["id"] == permission_id for d in [perm._mapping for perm in perms])
 
     @staticmethod
     async def has_module_perm(
@@ -261,8 +261,6 @@ class AuthenticationBackend:
     async def with_perm(
         perm,
         conn: sa.ext.asyncio.engine.AsyncConnection,
-        is_active=True,
-        include_superuser=True,
     ):
         """
         Return users that have permission "perm". By default, filter out
