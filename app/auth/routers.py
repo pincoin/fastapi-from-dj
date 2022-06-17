@@ -145,28 +145,15 @@ async def update_user(
     if not user_dict:
         raise exceptions.bad_request_exception()
 
-    # 2. Fetch saved row from database
-    stmt = sa.select(models.users).where(models.users.c.id == user_id)
-    user_row = await CRUDModel(conn).get_one_or_404(stmt, "User")
-
-    # 3. Create pydantic model instance from fetched row dict
-    user_model = schemas.User(**user_row._mapping)
-
-    # 4. Create NEW pydantic model from user_model + user_dict
-    user_model_new = user_model.copy(update=user_dict)
-
-    stmt = (
-        models.users.update()
-        .where(models.users.c.id == user_id)
-        .values(**user_model_new.dict())
-    )
-
     try:
-        # 5. Execute update statement
-        await conn.execute(stmt)
-
-        # 6. Encode pydantic model into JSON
-        return fastapi.encoders.jsonable_encoder(user_model_new)
+        user_model = await CRUDModel(conn).update_or_failure(
+            user_dict,
+            schemas.User,
+            models.users,
+            models.users.c.id == user_id,
+            "User",
+        )
+        return fastapi.encoders.jsonable_encoder(user_model)
     except sa.exc.IntegrityError:
         raise exceptions.conflict_exception()
 
@@ -308,23 +295,15 @@ async def update_content_type(
     if not content_type_dict:
         raise exceptions.bad_request_exception()
 
-    stmt = sa.select(models.content_types).where(
-        models.content_types.c.id == content_type_id
-    )
-
-    content_type_row = await CRUDModel(conn).get_one_or_404(stmt, "Content Type")
-    content_type_model = schemas.ContentType(**content_type_row._mapping)
-    content_type_model_new = content_type_model.copy(update=content_type_dict)
-
-    stmt = (
-        models.content_types.update()
-        .where(models.content_types.c.id == content_type_id)
-        .values(**content_type_model_new.dict())
-    )
-
     try:
-        await conn.execute(stmt)
-        return fastapi.encoders.jsonable_encoder(content_type_model_new)
+        content_type_model = await CRUDModel(conn).update_or_failure(
+            content_type_dict,
+            schemas.ContentType,
+            models.content_types,
+            models.content_types.c.id == content_type_id,
+            "Content Type",
+        )
+        return fastapi.encoders.jsonable_encoder(content_type_model)
     except sa.exc.IntegrityError:
         raise exceptions.conflict_exception()
 
@@ -416,21 +395,15 @@ async def update_permission_of_content_type(
     if permission_dict["content_type_id"] != content_type_id:
         raise exceptions.bad_request_exception()
 
-    stmt = sa.select(models.permissions).where(models.permissions.c.id == permission_id)
-
-    permission_row = await CRUDModel(conn).get_one_or_404(stmt, "Permission")
-    permission_model = schemas.Permission(**permission_row._mapping)
-    permission_model_new = permission_model.copy(update=permission_dict)
-
-    stmt = (
-        models.permissions.update()
-        .where(models.permissions.c.id == permission_id)
-        .values(**permission_model_new.dict())
-    )
-
     try:
-        await conn.execute(stmt)
-        return fastapi.encoders.jsonable_encoder(permission_model_new)
+        permission_model = await CRUDModel(conn).update_or_failure(
+            permission_dict,
+            schemas.Permission,
+            models.permissions,
+            models.permissions.c.id == permission_id,
+            "Permission",
+        )
+        return fastapi.encoders.jsonable_encoder(permission_model)
     except sa.exc.IntegrityError:
         raise exceptions.conflict_exception()
 
@@ -518,21 +491,15 @@ async def update_group(
     if not group_dict:
         raise exceptions.bad_request_exception()
 
-    stmt = sa.select(models.groups).where(models.groups.c.id == group_id)
-
-    group_row = await CRUDModel(conn).get_one_or_404(stmt, "Group")
-    group_model = schemas.Group(**group_row._mapping)
-    group_model_new = group_model.copy(update=group_dict)
-
-    stmt = (
-        models.groups.update()
-        .where(models.groups.c.id == group_id)
-        .values(**group_model_new.dict())
-    )
-
     try:
-        await conn.execute(stmt)
-        return fastapi.encoders.jsonable_encoder(group_model_new)
+        group_model = await CRUDModel(conn).update_or_failure(
+            group_dict,
+            schemas.Group,
+            models.groups,
+            models.groups.c.id == group_id,
+            "Group",
+        )
+        return fastapi.encoders.jsonable_encoder(group_model)
     except sa.exc.IntegrityError:
         raise exceptions.conflict_exception()
 
