@@ -456,7 +456,6 @@ async def get_group(
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
     stmt = sa.select(models.groups).where(models.groups.c.id == group_id)
-
     return await CRUDModel(conn).get_one_or_404(stmt, schemas.Group.Config().title)
 
 
@@ -673,8 +672,8 @@ async def get_permission(
     response_model_exclude={"password"},
 )
 async def list_users_of_permission(
-    permission_id: int = fastapi.Query(gt=0),
     params: dict = fastapi.Depends(list_params),
+    permission_id: int = fastapi.Query(gt=0),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
     stmt = (
@@ -686,7 +685,6 @@ async def list_users_of_permission(
         .where(models.user_permissions.c.permission_id == permission_id)
     )
     stmt = stmt.offset(params["skip"]).limit(params["take"])
-
     return await CRUDModel(conn).get_all(stmt)
 
 

@@ -261,11 +261,24 @@ class AuthenticationBackend:
 
     @staticmethod
     async def with_perm(
-        perm,
+        permission_id: int,
         conn: sa.ext.asyncio.engine.AsyncConnection,
+        is_active=True,
+        include_superusers=True,
     ):
-        """
-        Return users that have permission "perm". By default, filter out
-        inactive users and include superusers.
-        """
-        pass
+        stmt = (
+            sa.select(models.users)
+            .join_from(
+                models.users,
+                models.user_permissions,
+            )
+            .where(models.user_permissions.c.permission_id == permission_id)
+        )
+
+        if is_active:
+            stmt = stmt.where(models.users.c.is_active == True)
+
+        if not include_superusers:
+            stmt = stmt.where(models.users.c.is_superuser == False)
+
+        return await CRUDModel(conn).get_all(stmt)
