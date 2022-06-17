@@ -927,7 +927,7 @@ async def create_permission_of_group(
 
     try:
         cr: sa.engine.CursorResult = await conn.execute(stmt)
-        return schemas.UserPermission(
+        return schemas.GroupPermission(
             **group_permission_dict,
             id=cr.inserted_primary_key[0],
         )
