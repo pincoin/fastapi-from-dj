@@ -120,10 +120,9 @@ async def create_user(
     stmt = models.users.insert().values(**user_dict)
 
     try:
-        cr: sa.engine.CursorResult = await conn.execute(stmt)
         return schemas.User(
             **user_dict,
-            id=cr.inserted_primary_key[0],
+            id=await CRUDModel(conn).insert(stmt),
         )
     except sa.exc.IntegrityError:
         raise exceptions.conflict_exception()
@@ -288,13 +287,13 @@ async def create_content_type(
     content_type: schemas.ContentTypeCreate,
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
-    stmt = models.content_types.insert().values(**content_type.dict())
+    content_type_dict = content_type.dict()
+    stmt = models.content_types.insert().values(**content_type_dict)
 
     try:
-        cr: sa.engine.CursorResult = await conn.execute(stmt)
         return schemas.ContentType(
-            **content_type.dict(),
-            id=cr.inserted_primary_key[0],
+            **content_type_dict,
+            id=await CRUDModel(conn).insert(stmt),
         )
     except sa.exc.IntegrityError:
         raise exceptions.conflict_exception()
@@ -403,10 +402,9 @@ async def create_permission_of_content_type(
     stmt = models.permissions.insert().values(**permission_dict)
 
     try:
-        cr: sa.engine.CursorResult = await conn.execute(stmt)
         return schemas.Permission(
             **permission_dict,
-            id=cr.inserted_primary_key[0],
+            id=await CRUDModel(conn).insert(stmt),
         )
     except sa.exc.IntegrityError:
         raise exceptions.conflict_exception()
@@ -514,12 +512,12 @@ async def create_group(
     group: schemas.GroupCreate,
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
-    stmt = models.groups.insert().values(**group.dict())
+    group_dict = group.dict()
+    stmt = models.groups.insert().values(**group_dict)
     try:
-        cr: sa.engine.CursorResult = await conn.execute(stmt)
         return schemas.Group(
-            **group.dict(),
-            id=cr.inserted_primary_key[0],
+            **group_dict,
+            id=await CRUDModel(conn).insert(stmt),
         )
     except sa.exc.IntegrityError:
         raise exceptions.conflict_exception()
@@ -646,10 +644,9 @@ async def create_user_of_group(
     stmt = models.user_groups.insert().values(**user_group_dict)
 
     try:
-        cr: sa.engine.CursorResult = await conn.execute(stmt)
         return schemas.UserGroup(
             **user_group_dict,
-            id=cr.inserted_primary_key[0],
+            id=await CRUDModel(conn).insert(stmt),
         )
     except sa.exc.IntegrityError:
         raise exceptions.conflict_exception()
@@ -787,10 +784,9 @@ async def create_permission_of_user(
     stmt = models.user_permissions.insert().values(**user_permission_dict)
 
     try:
-        cr: sa.engine.CursorResult = await conn.execute(stmt)
         return schemas.UserPermission(
             **user_permission_dict,
-            id=cr.inserted_primary_key[0],
+            id=await CRUDModel(conn).insert(stmt),
         )
     except sa.exc.IntegrityError:
         raise exceptions.conflict_exception()
@@ -831,10 +827,9 @@ async def create_permission_of_group(
     stmt = models.group_permissions.insert().values(**group_permission_dict)
 
     try:
-        cr: sa.engine.CursorResult = await conn.execute(stmt)
         return schemas.GroupPermission(
             **group_permission_dict,
-            id=cr.inserted_primary_key[0],
+            id=await CRUDModel(conn).insert(stmt),
         )
     except sa.exc.IntegrityError:
         raise exceptions.conflict_exception()

@@ -25,7 +25,8 @@ class CRUDModel:
         return cr.fetchall()
 
     async def insert(self, statement):
-        pass
+        cr: sa.engine.CursorResult = await self.conn.execute(statement)
+        return cr.inserted_primary_key[0]
 
     async def update(self, statement):
         pass
