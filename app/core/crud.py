@@ -56,7 +56,7 @@ class CRUDModel:
         # 2. Create pydantic model instance from fetched row dict
         model = schema(**row._mapping)
 
-        # 3. Create NEW pydantic model from user_model + user_dict
+        # 3. Create NEW pydantic model from model + dict_in
         model_new = model.copy(update=dict_in)
 
         stmt = table.update().where(where).values(**model_new.dict())
