@@ -44,15 +44,13 @@ class CRUDModel:
 
     async def update_or_failure(
         self,
-        statement1,
-        statement2,
+        statement,
         dict_in: dict,
         model_out: BaseModel,
     ):
         # 1. Fetch saved row from database
-        row = await CRUDModel(self.conn).get_one_or_404(
-            statement1, model_out.Config().title
-        )
+        stmt = sa.select(statement.table).where(statement.whereclause)
+        row = await CRUDModel(self.conn).get_one_or_404(stmt, model_out.Config().title)
 
         # 2. Create pydantic model instance from fetched row dict
         model = model_out(**row._mapping)
@@ -61,8 +59,7 @@ class CRUDModel:
         model_new = model.copy(update=dict_in)
 
         # 4. Execute upate query
-        stmt = statement2.values(**model_new.dict())
-        await self.conn.execute(stmt)
+        await self.conn.execute(statement.values(**model_new.dict()))
 
         return model_new
 
