@@ -3,6 +3,7 @@ import datetime
 import fastapi
 import sqlalchemy as sa
 from core import config, exceptions
+from core.crud import CRUDModel
 from core.dependencies import engine_begin, engine_connect
 
 from . import models, schemas
@@ -78,9 +79,7 @@ async def list_users(
 
     stmt = stmt.offset(skip).limit(take)
 
-    cr: sa.engine.CursorResult = await conn.execute(stmt)
-
-    return cr.fetchall()
+    return await CRUDModel(conn).findAll(stmt)
 
 
 @router.get(
@@ -227,9 +226,7 @@ async def list_groups_of_user(
     )
     stmt = stmt.offset(skip).limit(take)
 
-    cr: sa.engine.CursorResult = await conn.execute(stmt)
-
-    return cr.fetchall()
+    return await CRUDModel(conn).findAll(stmt)
 
 
 @router.get(
@@ -253,9 +250,7 @@ async def list_permissions_of_user(
     )
     stmt = stmt.offset(skip).limit(take)
 
-    cr: sa.engine.CursorResult = await conn.execute(stmt)
-
-    return cr.fetchall()
+    return await CRUDModel(conn).findAll(stmt)
 
 
 @router.get(
@@ -279,9 +274,7 @@ async def list_content_types(
 
     stmt = stmt.offset(skip).limit(take)
 
-    cr: sa.engine.CursorResult = await conn.execute(stmt)
-
-    return cr.fetchall()
+    return await CRUDModel(conn).findAll(stmt)
 
 
 @router.get(
@@ -417,9 +410,7 @@ async def list_permissions_of_content_type(
     )
     stmt = stmt.offset(skip).limit(take)
 
-    cr: sa.engine.CursorResult = await conn.execute(stmt)
-
-    return cr.fetchall()
+    return await CRUDModel(conn).findAll(stmt)
 
 
 @router.post(
@@ -661,9 +652,7 @@ async def list_users_of_group(
     )
     stmt = stmt.offset(skip).limit(take)
 
-    cr: sa.engine.CursorResult = await conn.execute(stmt)
-
-    return cr.fetchall()
+    return await CRUDModel(conn).findAll(stmt)
 
 
 @router.get(
@@ -687,9 +676,7 @@ async def list_permissions_of_group(
     )
     stmt = stmt.offset(skip).limit(take)
 
-    cr: sa.engine.CursorResult = await conn.execute(stmt)
-
-    return cr.fetchall()
+    return await CRUDModel(conn).findAll(stmt)
 
 
 @router.post(
@@ -766,9 +753,7 @@ async def list_permissions(
     )
     stmt = stmt.offset(skip).limit(take)
 
-    cr: sa.engine.CursorResult = await conn.execute(stmt)
-
-    return cr.fetchall()
+    return await CRUDModel(conn).findAll(stmt)
 
 
 @router.get(
@@ -823,9 +808,7 @@ async def list_users_of_permission(
     )
     stmt = stmt.offset(skip).limit(take)
 
-    cr: sa.engine.CursorResult = await conn.execute(stmt)
-
-    return cr.fetchall()
+    return await CRUDModel(conn).findAll(stmt)
 
 
 @router.get(
@@ -849,9 +832,7 @@ async def list_groups_of_permission(
     )
     stmt = stmt.offset(skip).limit(take)
 
-    cr: sa.engine.CursorResult = await conn.execute(stmt)
-
-    return cr.fetchall()
+    return await CRUDModel(conn).findAll(stmt)
 
 
 @router.post(
@@ -983,6 +964,4 @@ async def list_content_types_of_permission(
     )
     stmt = stmt.offset(skip).limit(take)
 
-    cr: sa.engine.CursorResult = await conn.execute(stmt)
-
-    return cr.fetchall()
+    return await CRUDModel(conn).findAll(stmt)
