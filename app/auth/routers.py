@@ -93,7 +93,7 @@ async def get_user(
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
     stmt = sa.select(models.users).where(models.users.c.id == user_id)
-    return await CRUDModel(conn).get_one_or_404(stmt, "User")
+    return await CRUDModel(conn).get_one_or_404(stmt, schemas.User.Config().title)
 
 
 @router.post(
@@ -255,7 +255,9 @@ async def get_content_type(
         models.content_types.c.id == content_type_id
     )
 
-    return await CRUDModel(conn).get_one_or_404(stmt, "Content Type")
+    return await CRUDModel(conn).get_one_or_404(
+        stmt, schemas.ContentType.Config().title
+    )
 
 
 @router.post(
@@ -450,7 +452,7 @@ async def get_group(
 ):
     stmt = sa.select(models.groups).where(models.groups.c.id == group_id)
 
-    return await CRUDModel(conn).get_one_or_404(stmt, "Group")
+    return await CRUDModel(conn).get_one_or_404(stmt, schemas.Group.Config().title)
 
 
 @router.post(
@@ -650,7 +652,7 @@ async def get_permission(
         .where(models.permissions.c.id == permission_id)
     )
 
-    return await CRUDModel(conn).get_one_or_404(stmt, "Permission")
+    return await CRUDModel(conn).get_one_or_404(stmt, schemas.Permission.Config().title)
 
 
 @router.get(
