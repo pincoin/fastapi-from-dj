@@ -79,7 +79,7 @@ async def list_users(
 
     stmt = stmt.offset(skip).limit(take)
 
-    return await CRUDModel(conn).findAll(stmt)
+    return await CRUDModel(conn).get_all(stmt)
 
 
 @router.get(
@@ -93,13 +93,7 @@ async def get_user(
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
     stmt = sa.select(models.users).where(models.users.c.id == user_id)
-
-    cr: sa.engine.CursorResult = await conn.execute(stmt)
-
-    if user_row := cr.first():
-        return user_row
-
-    raise exceptions.item_not_found_exception("User")
+    return await CRUDModel(conn).get_one_or_404(stmt, "User")
 
 
 @router.post(
@@ -226,7 +220,7 @@ async def list_groups_of_user(
     )
     stmt = stmt.offset(skip).limit(take)
 
-    return await CRUDModel(conn).findAll(stmt)
+    return await CRUDModel(conn).get_all(stmt)
 
 
 @router.get(
@@ -250,7 +244,7 @@ async def list_permissions_of_user(
     )
     stmt = stmt.offset(skip).limit(take)
 
-    return await CRUDModel(conn).findAll(stmt)
+    return await CRUDModel(conn).get_all(stmt)
 
 
 @router.get(
@@ -274,7 +268,7 @@ async def list_content_types(
 
     stmt = stmt.offset(skip).limit(take)
 
-    return await CRUDModel(conn).findAll(stmt)
+    return await CRUDModel(conn).get_all(stmt)
 
 
 @router.get(
@@ -290,12 +284,7 @@ async def get_content_type(
         models.content_types.c.id == content_type_id
     )
 
-    cr: sa.engine.CursorResult = await conn.execute(stmt)
-
-    if content_type_row := cr.first():
-        return content_type_row
-
-    raise exceptions.item_not_found_exception("Content Type")
+    return await CRUDModel(conn).get_one_or_404(stmt, "Content Type")
 
 
 @router.post(
@@ -410,7 +399,7 @@ async def list_permissions_of_content_type(
     )
     stmt = stmt.offset(skip).limit(take)
 
-    return await CRUDModel(conn).findAll(stmt)
+    return await CRUDModel(conn).get_all(stmt)
 
 
 @router.post(
@@ -540,12 +529,7 @@ async def get_group(
 ):
     stmt = sa.select(models.groups).where(models.groups.c.id == group_id)
 
-    cr: sa.engine.CursorResult = await conn.execute(stmt)
-
-    if group_row := cr.first():
-        return group_row
-
-    raise exceptions.item_not_found_exception("Group")
+    return await CRUDModel(conn).get_one_or_404(stmt, "Group")
 
 
 @router.post(
@@ -652,7 +636,7 @@ async def list_users_of_group(
     )
     stmt = stmt.offset(skip).limit(take)
 
-    return await CRUDModel(conn).findAll(stmt)
+    return await CRUDModel(conn).get_all(stmt)
 
 
 @router.get(
@@ -676,7 +660,7 @@ async def list_permissions_of_group(
     )
     stmt = stmt.offset(skip).limit(take)
 
-    return await CRUDModel(conn).findAll(stmt)
+    return await CRUDModel(conn).get_all(stmt)
 
 
 @router.post(
@@ -753,7 +737,7 @@ async def list_permissions(
     )
     stmt = stmt.offset(skip).limit(take)
 
-    return await CRUDModel(conn).findAll(stmt)
+    return await CRUDModel(conn).get_all(stmt)
 
 
 @router.get(
@@ -778,12 +762,7 @@ async def get_permission(
         .where(models.permissions.c.id == permission_id)
     )
 
-    cr: sa.engine.CursorResult = await conn.execute(stmt)
-
-    if permission_row := cr.first():
-        return permission_row
-
-    raise exceptions.item_not_found_exception("Permission")
+    return await CRUDModel(conn).get_one_or_404(stmt, "Permission")
 
 
 @router.get(
@@ -808,7 +787,7 @@ async def list_users_of_permission(
     )
     stmt = stmt.offset(skip).limit(take)
 
-    return await CRUDModel(conn).findAll(stmt)
+    return await CRUDModel(conn).get_all(stmt)
 
 
 @router.get(
@@ -832,7 +811,7 @@ async def list_groups_of_permission(
     )
     stmt = stmt.offset(skip).limit(take)
 
-    return await CRUDModel(conn).findAll(stmt)
+    return await CRUDModel(conn).get_all(stmt)
 
 
 @router.post(
@@ -964,4 +943,4 @@ async def list_content_types_of_permission(
     )
     stmt = stmt.offset(skip).limit(take)
 
-    return await CRUDModel(conn).findAll(stmt)
+    return await CRUDModel(conn).get_all(stmt)
