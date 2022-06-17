@@ -139,18 +139,20 @@ async def update_user(
     user_id: int = fastapi.Query(gt=0),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
-    # 1. Create user input dict from user input json (excludes fields unset)
     user_dict = user.dict(exclude_unset=True)
 
     if not user_dict:
         raise exceptions.bad_request_exception()
 
+    stmt1 = sa.select(models.users).where(models.users.c.id == user_id)
+    stmt2 = sa.update(models.users).where(models.users.c.id == user_id)
+
     try:
         user_model = await CRUDModel(conn).update_or_failure(
+            stmt1,
+            stmt2,
             user_dict,
             schemas.User,
-            models.users,
-            models.users.c.id == user_id,
         )
         return fastapi.encoders.jsonable_encoder(user_model)
     except sa.exc.IntegrityError:
@@ -296,12 +298,19 @@ async def update_content_type(
     if not content_type_dict:
         raise exceptions.bad_request_exception()
 
+    stmt1 = sa.select(models.content_types).where(
+        models.content_types.c.id == content_type_id
+    )
+    stmt2 = sa.update(models.content_types).where(
+        models.content_types.c.id == content_type_id
+    )
+
     try:
         content_type_model = await CRUDModel(conn).update_or_failure(
+            stmt1,
+            stmt2,
             content_type_dict,
             schemas.ContentType,
-            models.content_types,
-            models.content_types.c.id == content_type_id,
         )
         return fastapi.encoders.jsonable_encoder(content_type_model)
     except sa.exc.IntegrityError:
@@ -395,12 +404,19 @@ async def update_permission_of_content_type(
     if permission_dict["content_type_id"] != content_type_id:
         raise exceptions.bad_request_exception()
 
+    stmt1 = sa.select(models.permissions).where(
+        models.permissions.c.id == permission_id
+    )
+    stmt2 = sa.update(models.permissions).where(
+        models.permissions.c.id == permission_id
+    )
+
     try:
         permission_model = await CRUDModel(conn).update_or_failure(
+            stmt1,
+            stmt2,
             permission_dict,
             schemas.Permission,
-            models.permissions,
-            models.permissions.c.id == permission_id,
         )
         return fastapi.encoders.jsonable_encoder(permission_model)
     except sa.exc.IntegrityError:
@@ -490,12 +506,15 @@ async def update_group(
     if not group_dict:
         raise exceptions.bad_request_exception()
 
+    stmt1 = sa.select(models.groups).where(models.groups.c.id == group_id)
+    stmt2 = sa.update(models.groups).where(models.groups.c.id == group_id)
+
     try:
         group_model = await CRUDModel(conn).update_or_failure(
+            stmt1,
+            stmt2,
             group_dict,
-            schemas.Group,
-            models.groups,
-            models.groups.c.id == group_id,
+            schemas.ContentType,
         )
         return fastapi.encoders.jsonable_encoder(group_model)
     except sa.exc.IntegrityError:
