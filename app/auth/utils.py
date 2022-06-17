@@ -254,8 +254,10 @@ class AuthenticationBackend:
         app_label: str,
         conn: sa.ext.asyncio.engine.AsyncConnection,
     ):
-        # Return True if user_obj has any permissions in the given app_label.
-        pass
+        perms = await AuthenticationBackend.get_all_permissions(user_id, conn)
+        return any(
+            d["app_label"] == app_label for d in [perm._mapping for perm in perms]
+        )
 
     @staticmethod
     async def with_perm(
