@@ -8,6 +8,7 @@ import typing
 import sqlalchemy as sa
 from core import config
 from jose import jwt
+from pydantic import Field
 
 from . import models
 
@@ -125,3 +126,70 @@ class AuthenticationBackend:
             settings.secret_key,
             algorithm=settings.jwt_algorithm,
         )
+
+    @staticmethod
+    async def get_user_permissions(
+        user_id: int,
+        conn: sa.ext.asyncio.engine.AsyncConnection,
+    ):
+        # permissions belongs to user
+        stmt = (
+            sa.select(models.permissions)
+            .join_from(
+                models.permissions,
+                models.user_permissions,
+            )
+            .where(models.user_permissions.c.user_id == user_id)
+        )
+
+        cr: sa.engine.CursorResult = await conn.execute(stmt)
+
+        return cr.fetchall()
+
+    @staticmethod
+    async def get_group_permissions(
+        user_id: int,
+        conn: sa.ext.asyncio.engine.AsyncConnection,
+    ):
+        # permissions belongs to group which belongs to user
+        pass
+
+    @staticmethod
+    async def get_all_permissions(
+        user_id: int,
+        conn: sa.ext.asyncio.engine.AsyncConnection,
+    ):
+        # caching required
+        # user permissions and group permissions
+        pass
+
+    @staticmethod
+    async def has_perm(
+        user_id: int,
+        perm,
+        conn: sa.ext.asyncio.engine.AsyncConnection,
+    ):
+        # member test
+        pass
+
+    @staticmethod
+    async def has_module_perm(
+        user_id: int,
+        app_label: str,
+        conn: sa.ext.asyncio.engine.AsyncConnection,
+    ):
+        # Return True if user_obj has any permissions in the given app_label.
+        pass
+
+    @staticmethod
+    async def with_perm(
+        perm,
+        conn: sa.ext.asyncio.engine.AsyncConnection,
+        is_active=True,
+        include_superuser=True,
+    ):
+        """
+        Return users that have permission "perm". By default, filter out
+        inactive users and include superusers.
+        """
+        pass

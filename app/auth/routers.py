@@ -147,13 +147,7 @@ async def update_user(
 
     # 2. Fetch saved row from database
     stmt = sa.select(models.users).where(models.users.c.id == user_id)
-
-    cr: sa.engine.CursorResult = await conn.execute(stmt)
-
-    user_row = cr.first()
-
-    if not user_row:
-        raise exceptions.item_not_found_exception("User")
+    user_row = await CRUDModel(conn).get_one_or_404(stmt, "User")
 
     # 3. Create pydantic model instance from fetched row dict
     user_model = schemas.User(**user_row._mapping)
@@ -318,15 +312,8 @@ async def update_content_type(
         models.content_types.c.id == content_type_id
     )
 
-    cr: sa.engine.CursorResult = await conn.execute(stmt)
-
-    content_type_row = cr.first()
-
-    if not content_type_row:
-        raise exceptions.item_not_found_exception("Content Type")
-
+    content_type_row = await CRUDModel(conn).get_one_or_404(stmt, "Content Type")
     content_type_model = schemas.ContentType(**content_type_row._mapping)
-
     content_type_model_new = content_type_model.copy(update=content_type_dict)
 
     stmt = (
@@ -431,15 +418,8 @@ async def update_permission_of_content_type(
 
     stmt = sa.select(models.permissions).where(models.permissions.c.id == permission_id)
 
-    cr: sa.engine.CursorResult = await conn.execute(stmt)
-
-    permission_row = cr.first()
-
-    if not permission_row:
-        raise exceptions.item_not_found_exception("Permission")
-
+    permission_row = await CRUDModel(conn).get_one_or_404(stmt, "Permission")
     permission_model = schemas.Permission(**permission_row._mapping)
-
     permission_model_new = permission_model.copy(update=permission_dict)
 
     stmt = (
@@ -540,15 +520,8 @@ async def update_group(
 
     stmt = sa.select(models.groups).where(models.groups.c.id == group_id)
 
-    cr: sa.engine.CursorResult = await conn.execute(stmt)
-
-    group_row = cr.first()
-
-    if not group_row:
-        raise exceptions.item_not_found_exception("Group")
-
+    group_row = await CRUDModel(conn).get_one_or_404(stmt, "Group")
     group_model = schemas.Group(**group_row._mapping)
-
     group_model_new = group_model.copy(update=group_dict)
 
     stmt = (

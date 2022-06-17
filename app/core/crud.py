@@ -18,7 +18,7 @@ class CRUDModel:
         if row := cr.first():
             return row
 
-        raise exceptions.item_not_found_exception(item)
+        raise exceptions.item_not_found_exceptsion(item)
 
     async def get_all(self, statement):
         cr: sa.engine.CursorResult = await self.conn.execute(statement)
@@ -28,7 +28,7 @@ class CRUDModel:
         cr: sa.engine.CursorResult = await self.conn.execute(statement)
         return cr.inserted_primary_key[0]
 
-    async def update(self, statement):
+    async def update_or_failure(self, statement):
         pass
 
     async def delete_one_or_404(self, statement, item: str = "Item"):
