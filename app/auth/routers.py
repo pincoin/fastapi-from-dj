@@ -196,7 +196,7 @@ async def list_groups_of_user(
 @router.get(
     "/users/{user_id}/permissions",
     status_code=fastapi.status.HTTP_200_OK,
-    response_model=list[schemas.Permission],
+    response_model=list[schemas.PermissionContentType],
 )
 async def list_permissions_of_user(
     user_id: int = fastapi.Query(gt=0),
@@ -204,7 +204,15 @@ async def list_permissions_of_user(
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
     stmt = (
-        sa.select(models.permissions)
+        sa.select(
+            models.permissions,
+            models.content_types.c.app_label,
+            models.content_types.c.model,
+        )
+        .join_from(
+            models.content_types,
+            models.permissions,
+        )
         .join_from(
             models.permissions,
             models.user_permissions,
@@ -326,7 +334,7 @@ async def delete_content_type(
 @router.get(
     "/content-types/{content_type_id}/permissions",
     status_code=fastapi.status.HTTP_200_OK,
-    response_model=list[schemas.Permission],
+    response_model=list[schemas.PermissionContentType],
 )
 async def list_permissions_of_content_type(
     content_type_id: int = fastapi.Query(gt=0),
@@ -336,7 +344,8 @@ async def list_permissions_of_content_type(
     stmt = (
         sa.select(
             models.permissions,
-            models.content_types,
+            models.content_types.c.app_label,
+            models.content_types.c.model,
         )
         .join_from(
             models.permissions,
@@ -539,7 +548,7 @@ async def list_users_of_group(
 @router.get(
     "/groups/{group_id}/permissions",
     status_code=fastapi.status.HTTP_200_OK,
-    response_model=list[schemas.Permission],
+    response_model=list[schemas.PermissionContentType],
 )
 async def list_permissions_of_group(
     group_id: int = fastapi.Query(gt=0),
@@ -547,7 +556,15 @@ async def list_permissions_of_group(
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
     stmt = (
-        sa.select(models.permissions)
+        sa.select(
+            models.permissions,
+            models.content_types.c.app_label,
+            models.content_types.c.model,
+        )
+        .join_from(
+            models.content_types,
+            models.permissions,
+        )
         .join_from(
             models.permissions,
             models.group_permissions,
@@ -621,9 +638,7 @@ async def list_permissions(
     )
     stmt = stmt.offset(params["skip"]).limit(params["take"])
 
-    return await AuthenticationBackend.get_all_permissions(
-        4, conn
-    )  # CRUDModel(conn).get_all(stmt)
+    return await CRUDModel(conn).get_all(stmt)
 
 
 @router.get(
