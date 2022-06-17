@@ -862,7 +862,7 @@ async def list_groups_of_permission(
 async def create_permission_of_user(
     permission_id: int = fastapi.Query(gt=0),
     user_id: int = fastapi.Query(gt=0),
-    conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
+    conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
     user_permission_dict = {
         "permission_id": permission_id,
@@ -889,7 +889,7 @@ async def create_permission_of_user(
 async def delete_permission_of_user(
     permission_id: int = fastapi.Query(gt=0),
     user_id: int = fastapi.Query(gt=0),
-    conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
+    conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
     stmt = sa.select(models.user_permissions).where(
         models.user_permissions.c.user_id == user_id,
@@ -916,7 +916,7 @@ async def delete_permission_of_user(
 async def create_permission_of_group(
     permission_id: int = fastapi.Query(gt=0),
     group_id: int = fastapi.Query(gt=0),
-    conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
+    conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
     group_permission_dict = {
         "permission_id": permission_id,
@@ -943,7 +943,7 @@ async def create_permission_of_group(
 async def delete_permission_of_group(
     permission_id: int = fastapi.Query(gt=0),
     group_id: int = fastapi.Query(gt=0),
-    conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
+    conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
     stmt = sa.select(models.group_permissions).where(
         models.group_permissions.c.group_id == group_id,
