@@ -1,6 +1,6 @@
 import fastapi
 from core import config
-from core.exceptions import invalid_credentials_exception
+from core.exceptions import invalid_token_exception
 from jose import JWTError, jwt
 
 settings = config.get_settings()
@@ -20,8 +20,8 @@ async def get_current_user(token: str = fastapi.Depends(oauth2_scheme)) -> dict:
         user_id: int = payload.get("id")
 
         if username is None or user_id is None:
-            raise invalid_credentials_exception()
+            raise invalid_token_exception()
 
         return {"username": username, "id": user_id}
     except JWTError:
-        raise invalid_credentials_exception()
+        raise invalid_token_exception()

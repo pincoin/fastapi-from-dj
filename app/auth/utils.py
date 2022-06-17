@@ -7,8 +7,8 @@ import typing
 
 import sqlalchemy as sa
 from core import config
+from core.crud import CRUDModel
 from jose import jwt
-from pydantic import Field
 
 from . import models
 
@@ -90,9 +90,7 @@ class AuthenticationBackend:
             models.users.c.is_active == True,
         )
 
-        cr: sa.engine.CursorResult = await conn.execute(stmt)
-
-        user_row = cr.first()
+        user_row = CRUDModel(conn).get_one(stmt)
 
         if not user_row:
             return False
@@ -142,9 +140,7 @@ class AuthenticationBackend:
             .where(models.user_permissions.c.user_id == user_id)
         )
 
-        cr: sa.engine.CursorResult = await conn.execute(stmt)
-
-        return cr.fetchall()
+        return CRUDModel(conn).get_all(stmt)
 
     @staticmethod
     async def get_group_permissions(
@@ -152,7 +148,24 @@ class AuthenticationBackend:
         conn: sa.ext.asyncio.engine.AsyncConnection,
     ):
         # permissions belongs to group which belongs to user
-        pass
+        stmt = (
+            sa.select(models.permissions)
+            .join_from(
+                models.permissions,
+                models.group_permissions,
+            )
+            .join_from(
+                models.group_permissions,
+                models.groups,
+            )
+            .join_from(
+                models.groups,
+                models.user_groups,
+            )
+            .where(models.user_groups.c.user_id == user_id)
+        )
+
+        return CRUDModel(conn).get_all(stmt)
 
     @staticmethod
     async def get_all_permissions(
