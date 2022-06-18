@@ -2,16 +2,13 @@ import datetime
 
 import fastapi
 import sqlalchemy as sa
-from core import config, exceptions
+from core import exceptions
 from core.crud import CRUDModel
 from core.dependencies import engine_begin, engine_connect
 from core.utils import list_params
 
-from . import models, schemas
-from .utils import AuthenticationBackend, Pbkdf2Sha256Hasher
-
-settings = config.get_settings()
-
+from . import hashers, models, schemas
+from .utils import AuthenticationBackend
 
 router = fastapi.APIRouter(
     prefix="/auth",
@@ -105,7 +102,7 @@ async def create_user(
     user: schemas.UserCreate,
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
-    hashed_password = Pbkdf2Sha256Hasher.get_hashed_password(user.password)
+    hashed_password = hashers.hasher.get_hashed_password(user.password)
 
     user_dict = user.dict() | {
         "password": hashed_password,

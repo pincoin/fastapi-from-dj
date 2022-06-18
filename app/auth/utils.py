@@ -1,84 +1,16 @@
-import base64
 import datetime
-import hashlib
-import math
-import secrets
 import typing
 
 import fastapi
 import sqlalchemy as sa
-from core import config, exceptions
+from core import exceptions
+from core.config import settings
 from core.crud import CRUDModel
 from jose import JWTError, jwt
 
-from . import models
-
-settings = config.get_settings()
+from . import hashers, models
 
 oauth2_scheme = fastapi.security.OAuth2PasswordBearer(tokenUrl="/auth/token")
-
-
-class Pbkdf2Sha256Hasher:
-    RANDOM_STRING_CHARS = (
-        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-    )
-
-    algorithm = "pbkdf2_sha256"
-    iterations = 320000
-
-    @staticmethod
-    def salt() -> str:
-        # random string (alphanumeric 22 chars)
-        char_count = math.ceil(
-            128 / math.log2(len(Pbkdf2Sha256Hasher.RANDOM_STRING_CHARS))
-        )  # 22
-        return "".join(
-            secrets.choice(Pbkdf2Sha256Hasher.RANDOM_STRING_CHARS)
-            for i in range(char_count)
-        )
-
-    @staticmethod
-    def hasher(plain: str, salt: str) -> str:
-        hash = hashlib.pbkdf2_hmac(
-            hashlib.sha256().name,  # 'sha256',
-            plain.encode(),  # bytecode
-            salt.encode(),  # bytecode
-            Pbkdf2Sha256Hasher.iterations,  # 320000
-            None,
-        )
-        hash = base64.b64encode(hash).decode("ascii").strip()
-        return hash
-
-    @staticmethod
-    def encode(hash: str, salt: str) -> str:
-        return f"{Pbkdf2Sha256Hasher.algorithm}${Pbkdf2Sha256Hasher.iterations}${salt}${hash}"
-
-    @staticmethod
-    def decode(encoded: str) -> dict:
-        algorithm, iterations, salt, hash = encoded.split("$", 3)
-        return {
-            "algorithm": algorithm,
-            "hash": hash,
-            "iterations": int(iterations),
-            "salt": salt,
-        }
-
-    @staticmethod
-    def get_hashed_password(plain: str) -> str:
-        salt = Pbkdf2Sha256Hasher.salt()
-        hash = Pbkdf2Sha256Hasher.hasher(plain, salt)
-        hashed_password = Pbkdf2Sha256Hasher.encode(hash, salt)
-        return hashed_password
-
-    @staticmethod
-    def verify_password(plain: str, encoded: str) -> bool:
-        decoded = Pbkdf2Sha256Hasher.decode(encoded)
-        hashed = Pbkdf2Sha256Hasher.hasher(plain, decoded["salt"])
-
-        if hashed == decoded["hash"]:
-            return True
-
-        return False
 
 
 class AuthenticationBackend:
@@ -119,7 +51,7 @@ class AuthenticationBackend:
 
         user_dict = user_row._mapping
 
-        if not Pbkdf2Sha256Hasher.verify_password(password, user_dict["password"]):
+        if not hashers.hasher.verify_password(password, user_dict["password"]):
             return False
 
         return user_dict

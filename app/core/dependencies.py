@@ -1,10 +1,6 @@
 import typing
 
-from core import config
-
 from .database import engine
-
-settings = config.get_settings()
 
 
 async def engine_begin() -> typing.Generator:

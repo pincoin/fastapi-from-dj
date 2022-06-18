@@ -3,9 +3,7 @@ from functools import lru_cache
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import create_async_engine
 
-from .config import get_settings
-
-settings = get_settings()
+from .config import settings
 
 kwargs = {"echo": settings.debug}
 
