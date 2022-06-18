@@ -1,4 +1,6 @@
+import abc
 import datetime
+import importlib
 import typing
 from functools import lru_cache
 
@@ -14,7 +16,85 @@ from . import hashers, models
 oauth2_scheme = fastapi.security.OAuth2PasswordBearer(tokenUrl="/auth/token")
 
 
-class AuthenticationBackend:
+class BaseAuthenticationBackend(metaclass=abc.ABCMeta):
+    @abc.abstractmethod
+    async def get_current_user(
+        self, token: str = fastapi.Depends(oauth2_scheme)
+    ) -> dict:
+        pass
+
+    @abc.abstractmethod
+    async def authenticate(
+        self,
+        username: str,
+        password: str,
+        conn: sa.ext.asyncio.engine.AsyncConnection,
+    ) -> dict | None:
+        pass
+
+    @abc.abstractmethod
+    def create_access_token(
+        self,
+        username: str,
+        user_id: int,
+        expires_delta: datetime.timedelta | None,
+    ) -> typing.Any:
+        pass
+
+    @abc.abstractmethod
+    async def get_user_permissions(
+        self,
+        user_id: int,
+        conn: sa.ext.asyncio.engine.AsyncConnection,
+    ):
+        pass
+
+    @abc.abstractmethod
+    async def get_group_permissions(
+        self,
+        user_id: int,
+        conn: sa.ext.asyncio.engine.AsyncConnection,
+    ):
+        pass
+
+    @abc.abstractmethod
+    async def get_all_permissions(
+        self,
+        user_id: int,
+        conn: sa.ext.asyncio.engine.AsyncConnection,
+    ):
+        pass
+
+    @abc.abstractmethod
+    async def has_perm(
+        self,
+        user_id: int,
+        permission_id: int,
+        conn: sa.ext.asyncio.engine.AsyncConnection,
+    ):
+        pass
+
+    @abc.abstractmethod
+    async def has_module_perm(
+        self,
+        user_id: int,
+        app_label: str,
+        conn: sa.ext.asyncio.engine.AsyncConnection,
+    ):
+        pass
+
+    @abc.abstractmethod
+    async def with_perm(
+        self,
+        permission_id: int,
+        conn: sa.ext.asyncio.engine.AsyncConnection,
+        is_active=True,
+        include_superusers=True,
+    ):
+        pass
+
+
+class AuthenticationBackend(BaseAuthenticationBackend):
     async def get_current_user(
         self, token: str = fastapi.Depends(oauth2_scheme)
     ) -> dict:
@@ -270,7 +350,12 @@ class AuthenticationBackend:
 
 @lru_cache(maxsize=1)
 def get_authentication_backend():
-    return AuthenticationBackend()
+    path = settings.authentication_backend.split(".")
+    AuthenticationBackendClass = getattr(
+        importlib.import_module(".".join(path[0:-1])),
+        path[-1],
+    )
+    return AuthenticationBackendClass()
 
 
 authentication = get_authentication_backend()

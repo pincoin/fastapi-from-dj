@@ -1,7 +1,7 @@
 # fastapi-from-dj
 This is a FastAPI boilerplate template for quick start.
 
-This project watches the same database schemes which was installed by Django.
+This project watches the same database schemes which was installed by Django. You can authenticate users with Django-compatible authentication backend and password hasher. However, you can define your own authentication backend password hasher.
 
 This project is based on Python 3.10+ and SQLAlchemy 1.4+ in order to utilize async connections and lastest Python features.
 
@@ -33,6 +33,8 @@ debug=True
 uvicorn_reload=True
 secret_key="Minimum-length-32-secret-key-string-for-HS256"
 jwt_algorithm="HS256"
+password_hasher="auth.hashers.Pbkdf2Sha256Hasher"
+authentication_backend="auth.backends.AuthenticationBackend"
 sqlalchemy_database_uri="postgresql+asyncpg://username:password@host:port/database"
 ```
 

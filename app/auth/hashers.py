@@ -1,11 +1,25 @@
+import abc
 import base64
 import hashlib
+import importlib
 import math
 import secrets
 from functools import lru_cache
 
+from core.config import settings
 
-class Pbkdf2Sha256Hasher:
+
+class BaseHasher(metaclass=abc.ABCMeta):
+    @abc.abstractmethod
+    def get_hashed_password(self, plain: str) -> str:
+        pass
+
+    @abc.abstractmethod
+    def verify_password(self, plain: str, encoded: str) -> bool:
+        pass
+
+
+class Pbkdf2Sha256Hasher(BaseHasher):
     RANDOM_STRING_CHARS = (
         "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
     )
@@ -61,7 +75,12 @@ class Pbkdf2Sha256Hasher:
 
 @lru_cache(maxsize=1)
 def get_hasher():
-    return Pbkdf2Sha256Hasher()
+    path = settings.password_hasher.split(".")
+    PasswordHasherClass = getattr(
+        importlib.import_module(".".join(path[0:-1])),
+        path[-1],
+    )
+    return PasswordHasherClass()
 
 
 hasher = get_hasher()

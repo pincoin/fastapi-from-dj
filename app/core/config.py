@@ -14,6 +14,8 @@ class Settings(BaseSettings):
 
     secret_key: str = Field(min_length=32)
     jwt_algorithm: str = "HS256"
+    password_hasher = "auth.hashers.Pbkdf2Sha256Hasher"
+    authentication_backend = "auth.backends.AuthenticationBackend"
 
     sqlalchemy_database_uri: PostgresDsn
 
