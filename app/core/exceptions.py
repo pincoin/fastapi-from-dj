@@ -8,7 +8,7 @@ def bad_request_exception():
     )
 
 
-def invalid_token_exception():
+def invalid_credentials_exception():
     return HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Invalid username or password",
