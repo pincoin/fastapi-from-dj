@@ -301,11 +301,8 @@ class AuthenticationBackend(BaseAuthenticationBackend):
 
 @lru_cache(maxsize=1)
 def get_authentication_backend():
-    path = settings.authentication_backend.split(".")
-    AuthenticationBackendClass = getattr(
-        importlib.import_module(".".join(path[0:-1])),
-        path[-1],
-    )
+    m, c = settings.authentication_backend.rsplit(".", 1)
+    AuthenticationBackendClass = getattr(importlib.import_module(m), c)
     return AuthenticationBackendClass()
 
 
