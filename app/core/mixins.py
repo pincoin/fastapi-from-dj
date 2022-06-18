@@ -1,6 +1,5 @@
 import sqlalchemy as sa
 
-
 """
 Usage: inject tuples into Table
 
