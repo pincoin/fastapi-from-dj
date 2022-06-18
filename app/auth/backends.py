@@ -1,5 +1,6 @@
 import datetime
 import typing
+from functools import lru_cache
 
 import fastapi
 import sqlalchemy as sa
@@ -14,8 +15,9 @@ oauth2_scheme = fastapi.security.OAuth2PasswordBearer(tokenUrl="/auth/token")
 
 
 class AuthenticationBackend:
-    @staticmethod
-    async def get_current_user(token: str = fastapi.Depends(oauth2_scheme)) -> dict:
+    async def get_current_user(
+        self, token: str = fastapi.Depends(oauth2_scheme)
+    ) -> dict:
         try:
             payload = jwt.decode(
                 token,
@@ -33,8 +35,8 @@ class AuthenticationBackend:
         except JWTError:
             raise exceptions.invalid_token_exception()
 
-    @staticmethod
     async def authenticate(
+        self,
         username: str,
         password: str,
         conn: sa.ext.asyncio.engine.AsyncConnection,
@@ -56,8 +58,8 @@ class AuthenticationBackend:
 
         return user_dict
 
-    @staticmethod
     def create_access_token(
+        self,
         username: str,
         user_id: int,
         expires_delta: datetime.timedelta | None,
@@ -79,8 +81,8 @@ class AuthenticationBackend:
             algorithm=settings.jwt_algorithm,
         )
 
-    @staticmethod
     async def get_user_permissions(
+        self,
         user_id: int,
         conn: sa.ext.asyncio.engine.AsyncConnection,
     ):
@@ -111,8 +113,8 @@ class AuthenticationBackend:
 
         return await CRUDModel(conn).get_all(stmt)
 
-    @staticmethod
     async def get_group_permissions(
+        self,
         user_id: int,
         conn: sa.ext.asyncio.engine.AsyncConnection,
     ):
@@ -151,8 +153,8 @@ class AuthenticationBackend:
 
         return await CRUDModel(conn).get_all(stmt)
 
-    @staticmethod
     async def get_all_permissions(
+        self,
         user_id: int,
         conn: sa.ext.asyncio.engine.AsyncConnection,
     ):
@@ -221,28 +223,28 @@ class AuthenticationBackend:
 
         return await CRUDModel(conn).get_all(stmt)
 
-    @staticmethod
     async def has_perm(
+        self,
         user_id: int,
         permission_id: int,
         conn: sa.ext.asyncio.engine.AsyncConnection,
     ):
-        perms = await AuthenticationBackend.get_all_permissions(user_id, conn)
+        perms = await self.get_all_permissions(user_id, conn)
         return any(d["id"] == permission_id for d in [perm._mapping for perm in perms])
 
-    @staticmethod
     async def has_module_perm(
+        self,
         user_id: int,
         app_label: str,
         conn: sa.ext.asyncio.engine.AsyncConnection,
     ):
-        perms = await AuthenticationBackend.get_all_permissions(user_id, conn)
+        perms = await self.get_all_permissions(user_id, conn)
         return any(
             d["app_label"] == app_label for d in [perm._mapping for perm in perms]
         )
 
-    @staticmethod
     async def with_perm(
+        self,
         permission_id: int,
         conn: sa.ext.asyncio.engine.AsyncConnection,
         is_active=True,
@@ -264,3 +266,11 @@ class AuthenticationBackend:
             stmt = stmt.where(models.users.c.is_superuser == False)
 
         return await CRUDModel(conn).get_all(stmt)
+
+
+@lru_cache(maxsize=1)
+def get_authentication_backend():
+    return AuthenticationBackend()
+
+
+authentication = get_authentication_backend()

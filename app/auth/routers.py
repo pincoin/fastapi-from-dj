@@ -7,8 +7,7 @@ from core.crud import CRUDModel
 from core.dependencies import engine_begin, engine_connect
 from core.utils import list_params
 
-from . import hashers, models, schemas
-from .utils import AuthenticationBackend
+from . import backends, hashers, models, schemas
 
 router = fastapi.APIRouter(
     prefix="/auth",
@@ -26,7 +25,7 @@ async def login_for_access_token(
     form_data: fastapi.security.OAuth2PasswordRequestForm = fastapi.Depends(),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
-    user_dict = await AuthenticationBackend.authenticate(
+    user_dict = await backends.authentication.authenticate(
         form_data.username,
         form_data.password,
         conn,
@@ -36,7 +35,7 @@ async def login_for_access_token(
         raise exceptions.invalid_credentials_exception()
 
     access_token_expires = datetime.timedelta(minutes=30)
-    access_token = AuthenticationBackend.create_access_token(
+    access_token = backends.authentication.create_access_token(
         user_dict["username"],
         user_dict["id"],
         expires_delta=access_token_expires,
@@ -58,7 +57,7 @@ async def list_users(
     is_staff: bool | None = False,
     is_superuser: bool | None = False,
     params: dict = fastapi.Depends(list_params),
-    current_user: dict = fastapi.Depends(AuthenticationBackend.get_current_user),
+    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
     if current_user is None:

@@ -13,35 +13,28 @@ class Pbkdf2Sha256Hasher:
     algorithm = "pbkdf2_sha256"
     iterations = 320000
 
-    @staticmethod
-    def salt() -> str:
+    def salt(self) -> str:
         # random string (alphanumeric 22 chars)
-        char_count = math.ceil(
-            128 / math.log2(len(Pbkdf2Sha256Hasher.RANDOM_STRING_CHARS))
-        )  # 22
+        char_count = math.ceil(128 / math.log2(len(self.RANDOM_STRING_CHARS)))  # 22
         return "".join(
-            secrets.choice(Pbkdf2Sha256Hasher.RANDOM_STRING_CHARS)
-            for i in range(char_count)
+            secrets.choice(self.RANDOM_STRING_CHARS) for i in range(char_count)
         )
 
-    @staticmethod
-    def hasher(plain: str, salt: str) -> str:
+    def hasher(self, plain: str, salt: str) -> str:
         hash = hashlib.pbkdf2_hmac(
             hashlib.sha256().name,  # 'sha256',
             plain.encode(),  # bytecode
             salt.encode(),  # bytecode
-            Pbkdf2Sha256Hasher.iterations,  # 320000
+            self.iterations,  # 320000
             None,
         )
         hash = base64.b64encode(hash).decode("ascii").strip()
         return hash
 
-    @staticmethod
-    def encode(hash: str, salt: str) -> str:
-        return f"{Pbkdf2Sha256Hasher.algorithm}${Pbkdf2Sha256Hasher.iterations}${salt}${hash}"
+    def encode(self, hash: str, salt: str) -> str:
+        return f"{self.algorithm}${self.iterations}${salt}${hash}"
 
-    @staticmethod
-    def decode(encoded: str) -> dict:
+    def decode(self, encoded: str) -> dict:
         algorithm, iterations, salt, hash = encoded.split("$", 3)
         return {
             "algorithm": algorithm,
@@ -50,17 +43,15 @@ class Pbkdf2Sha256Hasher:
             "salt": salt,
         }
 
-    @staticmethod
-    def get_hashed_password(plain: str) -> str:
-        salt = Pbkdf2Sha256Hasher.salt()
-        hash = Pbkdf2Sha256Hasher.hasher(plain, salt)
-        hashed_password = Pbkdf2Sha256Hasher.encode(hash, salt)
+    def get_hashed_password(self, plain: str) -> str:
+        salt = self.salt()
+        hash = self.hasher(plain, salt)
+        hashed_password = self.encode(hash, salt)
         return hashed_password
 
-    @staticmethod
-    def verify_password(plain: str, encoded: str) -> bool:
-        decoded = Pbkdf2Sha256Hasher.decode(encoded)
-        hashed = Pbkdf2Sha256Hasher.hasher(plain, decoded["salt"])
+    def verify_password(self, plain: str, encoded: str) -> bool:
+        decoded = self.decode(encoded)
+        hashed = self.hasher(plain, decoded["salt"])
 
         if hashed == decoded["hash"]:
             return True
