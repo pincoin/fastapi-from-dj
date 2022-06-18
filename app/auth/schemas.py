@@ -38,12 +38,12 @@ class User(BaseModel):
         title = "User"
 
 
-class GroupCreate(BaseModel):
-    name: str = Field(max_length=150)
-
-
 class GroupUpdate(BaseModel):
     name: str | None = Field(max_length=150)
+
+
+class GroupCreate(GroupUpdate):
+    name: str = Field(max_length=150)
 
 
 class Group(GroupCreate):
@@ -53,14 +53,14 @@ class Group(GroupCreate):
         title = "Group"
 
 
-class ContentTypeCreate(BaseModel):
-    app_label: str = Field(max_length=100)
-    model: str = Field(max_length=100)
-
-
 class ContentTypeUpdate(BaseModel):
     app_label: str | None = Field(max_length=100)
     model: str | None = Field(max_length=100)
+
+
+class ContentTypeCreate(ContentTypeUpdate):
+    app_label: str = Field(max_length=100)
+    model: str = Field(max_length=100)
 
 
 class ContentType(ContentTypeCreate):
@@ -70,16 +70,15 @@ class ContentType(ContentTypeCreate):
         title = "Content Type"
 
 
-class PermissionCreate(BaseModel):
-    content_type_id: int
-    name: str = Field(max_length=255)
-    codename: str = Field(max_length=100)
-
-
 class PermissionUpdate(BaseModel):
     content_type_id: int
     name: str | None = Field(max_length=255)
     codename: str | None = Field(max_length=100)
+
+
+class PermissionCreate(PermissionUpdate):
+    name: str = Field(max_length=255)
+    codename: str = Field(max_length=100)
 
 
 class Permission(PermissionCreate):
@@ -89,8 +88,8 @@ class Permission(PermissionCreate):
         title = "Permission"
 
 
-class PermissionContentType(Permission, ContentTypeCreate):
-    pass
+class PermissionContentType(Permission, ContentType):
+    id: int | None
 
 
 class UserGroup(BaseModel):
