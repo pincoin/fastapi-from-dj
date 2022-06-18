@@ -1,6 +1,17 @@
 import sqlalchemy as sa
 
 
+"""
+Usage: inject tuples into Table
+
+tablename_table = sa.Table(
+    "tablename",
+    metadata,
+    *mixin_factory()
+)
+"""
+
+
 def timestamped_mixin_factory():
     return (
         sa.Column(
