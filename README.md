@@ -17,12 +17,11 @@ Python 3.10 and above
 * SQLAlchemy[asyncio]
 * asyncpg
 * psycopg2-binary (for alembic)
+* alembic
 * pydantic[dotenv]
 * pydantic[email]
 * python-multipart
 * python-jose[cryptography]
-* uvicorn
-* alembic
 * uvicorn
 
 ## Settings
