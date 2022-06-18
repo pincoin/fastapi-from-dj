@@ -19,7 +19,8 @@ oauth2_scheme = fastapi.security.OAuth2PasswordBearer(tokenUrl="/auth/token")
 class BaseAuthenticationBackend(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     async def get_current_user(
-        self, token: str = fastapi.Depends(oauth2_scheme)
+        self,
+        token: str,
     ) -> dict:
         pass
 
