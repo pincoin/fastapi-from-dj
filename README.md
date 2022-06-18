@@ -3,7 +3,7 @@ This is a FastAPI boilerplate template for quick start.
 
 This project watches the same database schemes which was installed by Django.
 
-This project is based on Python 3.10+ and SQLAlchemy 1.4+ in order to utilize async connections.
+This project is based on Python 3.10+ and SQLAlchemy 1.4+ in order to utilize async connections and lastest Python features.
 
 ## Features
 * SQLAlchemy Async Core + CRUD on PostgreSQL
@@ -88,10 +88,17 @@ I decided to run both Django and FastAPI servers because of the following reason
 
 ## Django
 Pros
-* All-in-one framework with great 3rd party libraries in django-ecosystem
+* Easy to set up and run
+* High-level framework for rapid web development
 * Django ORM and Admin page
+* Built-in authentication system
+* A complete stack of tools
+* Cache framework comes with multiple cache mechanisms
 
 Cons
+* Monolithic platform.
+* High dependence on Django ORM
+* High learning curve
 * REST API is supported by DRF(Django Rest Framework)
 * WSGI
 * Websocket not supported
@@ -105,5 +112,7 @@ Pros
 * Websocket
 
 Cons
+* Slower MVP development in most cases,
+* Higher maintenance costs for more complex systems
 * Session not supported
-* Samll communities with small 3rd party libraries
+* Smaller community compared to Django
