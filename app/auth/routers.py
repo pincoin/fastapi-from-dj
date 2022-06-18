@@ -7,7 +7,7 @@ from core.crud import CRUDModel
 from core.dependencies import engine_begin, engine_connect
 from core.utils import list_params
 
-from . import backends, hashers, models, schemas
+from . import backends, hashers, helpers, models, schemas
 
 router = fastapi.APIRouter(
     prefix="/auth",
@@ -57,7 +57,7 @@ async def list_users(
     is_staff: bool | None = False,
     is_superuser: bool | None = False,
     params: dict = fastapi.Depends(list_params),
-    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
+    current_user: dict = fastapi.Depends(helpers.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
     if current_user is None:
@@ -85,7 +85,7 @@ async def list_users(
 )
 async def get_user(
     user_id: int = fastapi.Query(gt=0),
-    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
+    current_user: dict = fastapi.Depends(helpers.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
     if current_user is None:
@@ -103,7 +103,7 @@ async def get_user(
 )
 async def create_user(
     user: schemas.UserCreate,
-    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
+    current_user: dict = fastapi.Depends(helpers.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
     if current_user is None:
@@ -140,7 +140,7 @@ async def create_user(
 async def update_user(
     user: schemas.UserUpdate,
     user_id: int = fastapi.Query(gt=0),
-    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
+    current_user: dict = fastapi.Depends(helpers.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
     if current_user is None:
@@ -171,7 +171,7 @@ async def update_user(
 )
 async def delete_user(
     user_id: int = fastapi.Query(gt=0),
-    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
+    current_user: dict = fastapi.Depends(helpers.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
     if current_user is None:
@@ -189,7 +189,7 @@ async def delete_user(
 async def list_groups_of_user(
     user_id: int = fastapi.Query(gt=0),
     params: dict = fastapi.Depends(list_params),
-    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
+    current_user: dict = fastapi.Depends(helpers.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
     if current_user is None:
@@ -216,7 +216,7 @@ async def list_groups_of_user(
 async def list_permissions_of_user(
     user_id: int = fastapi.Query(gt=0),
     params: dict = fastapi.Depends(list_params),
-    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
+    current_user: dict = fastapi.Depends(helpers.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
     if current_user is None:
@@ -252,7 +252,7 @@ async def list_content_types(
     params: dict = fastapi.Depends(list_params),
     app_label: str | None = fastapi.Query(default=None, max_length=100),
     model: str | None = fastapi.Query(default=None, max_length=100),
-    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
+    current_user: dict = fastapi.Depends(helpers.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
     if current_user is None:
@@ -277,7 +277,7 @@ async def list_content_types(
 )
 async def get_content_type(
     content_type_id: int = fastapi.Query(default=0, gt=0),
-    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
+    current_user: dict = fastapi.Depends(helpers.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
     if current_user is None:
@@ -299,7 +299,7 @@ async def get_content_type(
 )
 async def create_content_type(
     content_type: schemas.ContentTypeCreate,
-    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
+    current_user: dict = fastapi.Depends(helpers.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
     if current_user is None:
@@ -325,7 +325,7 @@ async def create_content_type(
 async def update_content_type(
     content_type: schemas.ContentTypeUpdate,
     content_type_id: int = fastapi.Query(default=0, gt=0),
-    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
+    current_user: dict = fastapi.Depends(helpers.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
     if current_user is None:
@@ -358,7 +358,7 @@ async def update_content_type(
 )
 async def delete_content_type(
     content_type_id: int = fastapi.Query(default=0, gt=0),
-    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
+    current_user: dict = fastapi.Depends(helpers.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
     if current_user is None:
@@ -378,7 +378,7 @@ async def delete_content_type(
 async def list_permissions_of_content_type(
     content_type_id: int = fastapi.Query(gt=0),
     params: dict = fastapi.Depends(list_params),
-    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
+    current_user: dict = fastapi.Depends(helpers.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
     if current_user is None:
@@ -409,7 +409,7 @@ async def list_permissions_of_content_type(
 async def create_permission_of_content_type(
     permission: schemas.PermissionCreate,
     content_type_id: int = fastapi.Query(gt=0),
-    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
+    current_user: dict = fastapi.Depends(helpers.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
     if current_user is None:
@@ -440,7 +440,7 @@ async def update_permission_of_content_type(
     permission: schemas.PermissionUpdate,
     content_type_id: int = fastapi.Query(gt=0),
     permission_id: int = fastapi.Query(gt=0),
-    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
+    current_user: dict = fastapi.Depends(helpers.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
     if current_user is None:
@@ -475,7 +475,7 @@ async def update_permission_of_content_type(
 async def delete_permission_of_content_type(
     content_type_id: int = fastapi.Query(gt=0),
     permission_id: int = fastapi.Query(gt=0),
-    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
+    current_user: dict = fastapi.Depends(helpers.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
     if current_user is None:
@@ -495,7 +495,7 @@ async def delete_permission_of_content_type(
 )
 async def list_groups(
     params: dict = fastapi.Depends(list_params),
-    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
+    current_user: dict = fastapi.Depends(helpers.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
     if current_user is None:
@@ -512,7 +512,7 @@ async def list_groups(
 )
 async def get_group(
     group_id: int = fastapi.Query(default=0, gt=0),
-    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
+    current_user: dict = fastapi.Depends(helpers.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
     if current_user is None:
@@ -529,7 +529,7 @@ async def get_group(
 )
 async def create_group(
     group: schemas.GroupCreate,
-    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
+    current_user: dict = fastapi.Depends(helpers.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
     if current_user is None:
@@ -554,7 +554,7 @@ async def create_group(
 async def update_group(
     group: schemas.GroupUpdate,
     group_id: int = fastapi.Query(default=0, gt=0),
-    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
+    current_user: dict = fastapi.Depends(helpers.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
     if current_user is None:
@@ -585,7 +585,7 @@ async def update_group(
 )
 async def delete_group(
     group_id: int = fastapi.Query(default=0, gt=0),
-    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
+    current_user: dict = fastapi.Depends(helpers.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
     if current_user is None:
@@ -604,7 +604,7 @@ async def delete_group(
 async def list_users_of_group(
     group_id: int = fastapi.Query(gt=0),
     params: dict = fastapi.Depends(list_params),
-    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
+    current_user: dict = fastapi.Depends(helpers.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
     if current_user is None:
@@ -631,7 +631,7 @@ async def list_users_of_group(
 async def list_permissions_of_group(
     group_id: int = fastapi.Query(gt=0),
     params: dict = fastapi.Depends(list_params),
-    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
+    current_user: dict = fastapi.Depends(helpers.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
     if current_user is None:
@@ -666,7 +666,7 @@ async def list_permissions_of_group(
 async def create_user_of_group(
     group_id: int = fastapi.Query(gt=0),
     user_id: int = fastapi.Query(gt=0),
-    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
+    current_user: dict = fastapi.Depends(helpers.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
     if current_user is None:
@@ -696,7 +696,7 @@ async def create_user_of_group(
 async def delete_user_of_group(
     group_id: int = fastapi.Query(gt=0),
     user_id: int = fastapi.Query(gt=0),
-    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
+    current_user: dict = fastapi.Depends(helpers.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
     if current_user is None:
@@ -716,7 +716,7 @@ async def delete_user_of_group(
 )
 async def list_permissions(
     params: dict = fastapi.Depends(list_params),
-    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
+    current_user: dict = fastapi.Depends(helpers.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
     if current_user is None:
@@ -742,7 +742,7 @@ async def list_permissions(
 )
 async def get_permission(
     permission_id: int = fastapi.Query(default=0, gt=0),
-    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
+    current_user: dict = fastapi.Depends(helpers.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
     if current_user is None:
@@ -773,7 +773,7 @@ async def get_permission(
 async def list_users_of_permission(
     params: dict = fastapi.Depends(list_params),
     permission_id: int = fastapi.Query(gt=0),
-    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
+    current_user: dict = fastapi.Depends(helpers.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
     if current_user is None:
@@ -799,7 +799,7 @@ async def list_users_of_permission(
 async def list_groups_of_permission(
     permission_id: int = fastapi.Query(gt=0),
     params: dict = fastapi.Depends(list_params),
-    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
+    current_user: dict = fastapi.Depends(helpers.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
     if current_user is None:
@@ -826,7 +826,7 @@ async def list_groups_of_permission(
 async def create_permission_of_user(
     permission_id: int = fastapi.Query(gt=0),
     user_id: int = fastapi.Query(gt=0),
-    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
+    current_user: dict = fastapi.Depends(helpers.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
     if current_user is None:
@@ -856,7 +856,7 @@ async def create_permission_of_user(
 async def delete_permission_of_user(
     permission_id: int = fastapi.Query(gt=0),
     user_id: int = fastapi.Query(gt=0),
-    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
+    current_user: dict = fastapi.Depends(helpers.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
     if current_user is None:
@@ -877,7 +877,7 @@ async def delete_permission_of_user(
 async def create_permission_of_group(
     permission_id: int = fastapi.Query(gt=0),
     group_id: int = fastapi.Query(gt=0),
-    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
+    current_user: dict = fastapi.Depends(helpers.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
     if current_user is None:
@@ -907,7 +907,7 @@ async def create_permission_of_group(
 async def delete_permission_of_group(
     permission_id: int = fastapi.Query(gt=0),
     group_id: int = fastapi.Query(gt=0),
-    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
+    current_user: dict = fastapi.Depends(helpers.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
     if current_user is None:
@@ -928,7 +928,7 @@ async def delete_permission_of_group(
 async def list_content_types_of_permission(
     permission_id: int = fastapi.Query(gt=0),
     params: dict = fastapi.Depends(list_params),
-    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
+    current_user: dict = fastapi.Depends(helpers.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
     if current_user is None:

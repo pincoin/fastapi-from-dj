@@ -4,26 +4,15 @@ import importlib
 import typing
 from functools import lru_cache
 
-import fastapi
 import sqlalchemy as sa
-from core import exceptions
 from core.config import settings
 from core.crud import CRUDModel
-from jose import JWTError, jwt
+from jose import jwt
 
 from . import hashers, models
 
-oauth2_scheme = fastapi.security.OAuth2PasswordBearer(tokenUrl="/auth/token")
-
 
 class BaseAuthenticationBackend(metaclass=abc.ABCMeta):
-    @abc.abstractmethod
-    async def get_current_user(
-        self,
-        token: str,
-    ) -> dict:
-        pass
-
     @abc.abstractmethod
     async def authenticate(
         self,
@@ -75,47 +64,8 @@ class BaseAuthenticationBackend(metaclass=abc.ABCMeta):
     ):
         pass
 
-    @abc.abstractmethod
-    async def has_module_perm(
-        self,
-        user_id: int,
-        app_label: str,
-        conn: sa.ext.asyncio.engine.AsyncConnection,
-    ):
-        pass
-
-    @abc.abstractmethod
-    async def with_perm(
-        self,
-        permission_id: int,
-        conn: sa.ext.asyncio.engine.AsyncConnection,
-        is_active=True,
-        include_superusers=True,
-    ):
-        pass
-
 
 class AuthenticationBackend(BaseAuthenticationBackend):
-    async def get_current_user(
-        self, token: str = fastapi.Depends(oauth2_scheme)
-    ) -> dict:
-        try:
-            payload = jwt.decode(
-                token,
-                settings.secret_key,
-                algorithms=[settings.jwt_algorithm],
-            )
-
-            username: str = payload.get("sub")
-            user_id: int = payload.get("id")
-
-            if username is None or user_id is None:
-                raise exceptions.invalid_token_exception()
-
-            return {"username": username, "id": user_id}
-        except JWTError:
-            raise exceptions.invalid_token_exception()
-
     async def authenticate(
         self,
         username: str,
