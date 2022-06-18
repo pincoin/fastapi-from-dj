@@ -145,7 +145,14 @@ class AuthenticationBackend:
                 models.permissions,
                 models.user_permissions,
             )
-            .where(models.user_permissions.c.user_id == user_id)
+            .join_from(
+                models.user_permissions,
+                models.user,
+            )
+            .where(
+                models.users.c.user_id == user_id,
+                models.users.c.is_active == True,
+            )
         )
 
         return await CRUDModel(conn).get_all(stmt)
@@ -178,7 +185,14 @@ class AuthenticationBackend:
                 models.groups,
                 models.user_groups,
             )
-            .where(models.user_groups.c.user_id == user_id)
+            .join_from(
+                models.user_groups,
+                models.users,
+            )
+            .where(
+                models.users.c.user_id == user_id,
+                models.users.c.is_active == True,
+            )
         )
 
         return await CRUDModel(conn).get_all(stmt)
@@ -207,7 +221,14 @@ class AuthenticationBackend:
                 models.permissions,
                 models.user_permissions,
             )
-            .where(models.user_permissions.c.user_id == user_id)
+            .join_from(
+                models.user_permissions,
+                models.users,
+            )
+            .where(
+                models.users.c.user_id == user_id,
+                models.users.c.is_active == True,
+            )
         )
 
         stmt2 = (
@@ -232,7 +253,14 @@ class AuthenticationBackend:
                 models.groups,
                 models.user_groups,
             )
-            .where(models.user_groups.c.user_id == user_id)
+            .join_from(
+                models.user_groups,
+                models.users,
+            )
+            .where(
+                models.users.c.user_id == user_id,
+                models.users.c.is_active == True,
+            )
         )
 
         stmt = sa.union(stmt1, stmt2)
