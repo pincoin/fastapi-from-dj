@@ -113,7 +113,7 @@ Pros
 * Websocket
 
 Cons
-* Slower MVP development in most cases,
+* Slower MVP development in most cases
 * Higher maintenance costs for more complex systems
 * Session not supported
 * Smaller community compared to Django

@@ -85,8 +85,12 @@ async def list_users(
 )
 async def get_user(
     user_id: int = fastapi.Query(gt=0),
+    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
+    if current_user is None:
+        raise exceptions.forbidden_exception()
+
     stmt = sa.select(models.users).where(models.users.c.id == user_id)
     return await CRUDModel(conn).get_one_or_404(stmt, schemas.User.Config().title)
 
@@ -99,8 +103,12 @@ async def get_user(
 )
 async def create_user(
     user: schemas.UserCreate,
+    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
+    if current_user is None:
+        raise exceptions.forbidden_exception()
+
     hashed_password = hashers.hasher.get_hashed_password(user.password)
 
     user_dict = user.dict() | {
@@ -132,8 +140,12 @@ async def create_user(
 async def update_user(
     user: schemas.UserUpdate,
     user_id: int = fastapi.Query(gt=0),
+    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
+    if current_user is None:
+        raise exceptions.forbidden_exception()
+
     user_dict = user.dict(exclude_unset=True)
 
     if not user_dict:
@@ -159,8 +171,12 @@ async def update_user(
 )
 async def delete_user(
     user_id: int = fastapi.Query(gt=0),
+    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
+    if current_user is None:
+        raise exceptions.forbidden_exception()
+
     stmt = models.users.delete().where(models.users.c.id == user_id)
     await CRUDModel(conn).delete_one_or_404(stmt, "User")
 
@@ -173,8 +189,12 @@ async def delete_user(
 async def list_groups_of_user(
     user_id: int = fastapi.Query(gt=0),
     params: dict = fastapi.Depends(list_params),
+    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
+    if current_user is None:
+        raise exceptions.forbidden_exception()
+
     stmt = (
         sa.select(models.groups)
         .join_from(
@@ -196,8 +216,12 @@ async def list_groups_of_user(
 async def list_permissions_of_user(
     user_id: int = fastapi.Query(gt=0),
     params: dict = fastapi.Depends(list_params),
+    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
+    if current_user is None:
+        raise exceptions.forbidden_exception()
+
     stmt = (
         sa.select(
             models.permissions,
@@ -228,8 +252,12 @@ async def list_content_types(
     params: dict = fastapi.Depends(list_params),
     app_label: str | None = fastapi.Query(default=None, max_length=100),
     model: str | None = fastapi.Query(default=None, max_length=100),
+    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
+    if current_user is None:
+        raise exceptions.forbidden_exception()
+
     stmt = sa.select(models.content_types)
 
     if app_label:
@@ -249,8 +277,12 @@ async def list_content_types(
 )
 async def get_content_type(
     content_type_id: int = fastapi.Query(default=0, gt=0),
+    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
+    if current_user is None:
+        raise exceptions.forbidden_exception()
+
     stmt = sa.select(models.content_types).where(
         models.content_types.c.id == content_type_id
     )
@@ -267,8 +299,12 @@ async def get_content_type(
 )
 async def create_content_type(
     content_type: schemas.ContentTypeCreate,
+    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
+    if current_user is None:
+        raise exceptions.forbidden_exception()
+
     content_type_dict = content_type.dict()
     stmt = models.content_types.insert().values(**content_type_dict)
 
@@ -289,8 +325,12 @@ async def create_content_type(
 async def update_content_type(
     content_type: schemas.ContentTypeUpdate,
     content_type_id: int = fastapi.Query(default=0, gt=0),
+    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
+    if current_user is None:
+        raise exceptions.forbidden_exception()
+
     content_type_dict = content_type.dict(exclude_unset=True)
 
     if not content_type_dict:
@@ -318,8 +358,12 @@ async def update_content_type(
 )
 async def delete_content_type(
     content_type_id: int = fastapi.Query(default=0, gt=0),
+    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
+    if current_user is None:
+        raise exceptions.forbidden_exception()
+
     stmt = models.content_types.delete().where(
         models.content_types.c.id == content_type_id
     )
@@ -334,8 +378,12 @@ async def delete_content_type(
 async def list_permissions_of_content_type(
     content_type_id: int = fastapi.Query(gt=0),
     params: dict = fastapi.Depends(list_params),
+    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
+    if current_user is None:
+        raise exceptions.forbidden_exception()
+
     stmt = (
         sa.select(
             models.permissions,
@@ -361,8 +409,12 @@ async def list_permissions_of_content_type(
 async def create_permission_of_content_type(
     permission: schemas.PermissionCreate,
     content_type_id: int = fastapi.Query(gt=0),
+    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
+    if current_user is None:
+        raise exceptions.forbidden_exception()
+
     permission_dict = permission.dict()
 
     if permission_dict["content_type_id"] != content_type_id:
@@ -388,8 +440,12 @@ async def update_permission_of_content_type(
     permission: schemas.PermissionUpdate,
     content_type_id: int = fastapi.Query(gt=0),
     permission_id: int = fastapi.Query(gt=0),
+    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
+    if current_user is None:
+        raise exceptions.forbidden_exception()
+
     permission_dict = permission.dict(exclude_unset=True)
 
     if not permission_dict:
@@ -419,8 +475,12 @@ async def update_permission_of_content_type(
 async def delete_permission_of_content_type(
     content_type_id: int = fastapi.Query(gt=0),
     permission_id: int = fastapi.Query(gt=0),
+    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
+    if current_user is None:
+        raise exceptions.forbidden_exception()
+
     stmt = models.permissions.delete().where(
         models.permissions.c.id == permission_id,
         models.permissions.c.content_type_id == content_type_id,
@@ -435,8 +495,12 @@ async def delete_permission_of_content_type(
 )
 async def list_groups(
     params: dict = fastapi.Depends(list_params),
+    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
+    if current_user is None:
+        raise exceptions.forbidden_exception()
+
     stmt = sa.select(models.groups).offset(params["skip"]).limit(params["take"])
     return await CRUDModel(conn).get_all(stmt)
 
@@ -448,8 +512,12 @@ async def list_groups(
 )
 async def get_group(
     group_id: int = fastapi.Query(default=0, gt=0),
+    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
+    if current_user is None:
+        raise exceptions.forbidden_exception()
+
     stmt = sa.select(models.groups).where(models.groups.c.id == group_id)
     return await CRUDModel(conn).get_one_or_404(stmt, schemas.Group.Config().title)
 
@@ -461,8 +529,12 @@ async def get_group(
 )
 async def create_group(
     group: schemas.GroupCreate,
+    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
+    if current_user is None:
+        raise exceptions.forbidden_exception()
+
     group_dict = group.dict()
     stmt = models.groups.insert().values(**group_dict)
     try:
@@ -482,8 +554,12 @@ async def create_group(
 async def update_group(
     group: schemas.GroupUpdate,
     group_id: int = fastapi.Query(default=0, gt=0),
+    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
+    if current_user is None:
+        raise exceptions.forbidden_exception()
+
     group_dict = group.dict(exclude_unset=True)
 
     if not group_dict:
@@ -509,8 +585,12 @@ async def update_group(
 )
 async def delete_group(
     group_id: int = fastapi.Query(default=0, gt=0),
+    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
+    if current_user is None:
+        raise exceptions.forbidden_exception()
+
     stmt = models.groups.delete().where(models.groups.c.id == group_id)
     await CRUDModel(conn).delete_one_or_404(stmt, "Group")
 
@@ -524,8 +604,12 @@ async def delete_group(
 async def list_users_of_group(
     group_id: int = fastapi.Query(gt=0),
     params: dict = fastapi.Depends(list_params),
+    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
+    if current_user is None:
+        raise exceptions.forbidden_exception()
+
     stmt = (
         sa.select(models.users)
         .join_from(
@@ -547,8 +631,12 @@ async def list_users_of_group(
 async def list_permissions_of_group(
     group_id: int = fastapi.Query(gt=0),
     params: dict = fastapi.Depends(list_params),
+    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
+    if current_user is None:
+        raise exceptions.forbidden_exception()
+
     stmt = (
         sa.select(
             models.permissions,
@@ -578,8 +666,12 @@ async def list_permissions_of_group(
 async def create_user_of_group(
     group_id: int = fastapi.Query(gt=0),
     user_id: int = fastapi.Query(gt=0),
+    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
+    if current_user is None:
+        raise exceptions.forbidden_exception()
+
     user_group_dict = {
         "user_id": user_id,
         "group_id": group_id,
@@ -604,8 +696,12 @@ async def create_user_of_group(
 async def delete_user_of_group(
     group_id: int = fastapi.Query(gt=0),
     user_id: int = fastapi.Query(gt=0),
+    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
+    if current_user is None:
+        raise exceptions.forbidden_exception()
+
     stmt = models.user_groups.delete().where(
         models.user_groups.c.user_id == user_id,
         models.user_groups.c.group_id == group_id,
@@ -620,8 +716,12 @@ async def delete_user_of_group(
 )
 async def list_permissions(
     params: dict = fastapi.Depends(list_params),
+    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
+    if current_user is None:
+        raise exceptions.forbidden_exception()
+
     stmt = sa.select(
         models.permissions,
         models.content_types.c.app_label,
@@ -642,8 +742,12 @@ async def list_permissions(
 )
 async def get_permission(
     permission_id: int = fastapi.Query(default=0, gt=0),
+    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
+    if current_user is None:
+        raise exceptions.forbidden_exception()
+
     stmt = (
         sa.select(
             models.permissions,
@@ -669,8 +773,12 @@ async def get_permission(
 async def list_users_of_permission(
     params: dict = fastapi.Depends(list_params),
     permission_id: int = fastapi.Query(gt=0),
+    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
+    if current_user is None:
+        raise exceptions.forbidden_exception()
+
     stmt = (
         sa.select(models.users)
         .join_from(
@@ -691,8 +799,12 @@ async def list_users_of_permission(
 async def list_groups_of_permission(
     permission_id: int = fastapi.Query(gt=0),
     params: dict = fastapi.Depends(list_params),
+    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
+    if current_user is None:
+        raise exceptions.forbidden_exception()
+
     stmt = (
         sa.select(models.groups)
         .join_from(
@@ -714,8 +826,12 @@ async def list_groups_of_permission(
 async def create_permission_of_user(
     permission_id: int = fastapi.Query(gt=0),
     user_id: int = fastapi.Query(gt=0),
+    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
+    if current_user is None:
+        raise exceptions.forbidden_exception()
+
     user_permission_dict = {
         "permission_id": permission_id,
         "user_id": user_id,
@@ -740,8 +856,12 @@ async def create_permission_of_user(
 async def delete_permission_of_user(
     permission_id: int = fastapi.Query(gt=0),
     user_id: int = fastapi.Query(gt=0),
+    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
+    if current_user is None:
+        raise exceptions.forbidden_exception()
+
     stmt = models.user_permissions.delete().where(
         models.user_permissions.c.user_id == user_id,
         models.user_permissions.c.permission_id == permission_id,
@@ -757,8 +877,12 @@ async def delete_permission_of_user(
 async def create_permission_of_group(
     permission_id: int = fastapi.Query(gt=0),
     group_id: int = fastapi.Query(gt=0),
+    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
+    if current_user is None:
+        raise exceptions.forbidden_exception()
+
     group_permission_dict = {
         "permission_id": permission_id,
         "group_id": group_id,
@@ -783,8 +907,12 @@ async def create_permission_of_group(
 async def delete_permission_of_group(
     permission_id: int = fastapi.Query(gt=0),
     group_id: int = fastapi.Query(gt=0),
+    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_begin),
 ):
+    if current_user is None:
+        raise exceptions.forbidden_exception()
+
     stmt = models.group_permissions.delete().where(
         models.group_permissions.c.group_id == group_id,
         models.group_permissions.c.permission_id == permission_id,
@@ -800,8 +928,12 @@ async def delete_permission_of_group(
 async def list_content_types_of_permission(
     permission_id: int = fastapi.Query(gt=0),
     params: dict = fastapi.Depends(list_params),
+    current_user: dict = fastapi.Depends(backends.authentication.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
+    if current_user is None:
+        raise exceptions.forbidden_exception()
+
     stmt = (
         sa.select(models.content_types)
         .join_from(
