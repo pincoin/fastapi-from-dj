@@ -5,14 +5,17 @@ import math
 import secrets
 import typing
 
+import fastapi
 import sqlalchemy as sa
-from core import config
+from core import config, exceptions
 from core.crud import CRUDModel
-from jose import jwt
+from jose import JWTError, jwt
 
 from . import models
 
 settings = config.get_settings()
+
+oauth2_scheme = fastapi.security.OAuth2PasswordBearer(tokenUrl="/auth/token")
 
 
 class Pbkdf2Sha256Hasher:
@@ -80,6 +83,25 @@ class Pbkdf2Sha256Hasher:
 
 class AuthenticationBackend:
     @staticmethod
+    async def get_current_user(token: str = fastapi.Depends(oauth2_scheme)) -> dict:
+        try:
+            payload = jwt.decode(
+                token,
+                settings.secret_key,
+                algorithms=[settings.jwt_algorithm],
+            )
+
+            username: str = payload.get("sub")
+            user_id: int = payload.get("id")
+
+            if username is None or user_id is None:
+                raise exceptions.invalid_token_exception()
+
+            return {"username": username, "id": user_id}
+        except JWTError:
+            raise exceptions.invalid_token_exception()
+
+    @staticmethod
     async def authenticate(
         username: str,
         password: str,
@@ -90,7 +112,7 @@ class AuthenticationBackend:
             models.users.c.is_active == True,
         )
 
-        user_row = CRUDModel(conn).get_one(stmt)
+        user_row = await CRUDModel(conn).get_one(stmt)
 
         if not user_row:
             return False

@@ -8,7 +8,6 @@ from core.dependencies import engine_begin, engine_connect
 from core.utils import list_params
 
 from . import models, schemas
-from .dependencies import get_current_user
 from .utils import AuthenticationBackend, Pbkdf2Sha256Hasher
 
 settings = config.get_settings()
@@ -62,7 +61,7 @@ async def list_users(
     is_staff: bool | None = False,
     is_superuser: bool | None = False,
     params: dict = fastapi.Depends(list_params),
-    current_user: dict = fastapi.Depends(get_current_user),
+    current_user: dict = fastapi.Depends(AuthenticationBackend.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ):
     if current_user is None:
