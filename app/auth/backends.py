@@ -44,6 +44,27 @@ class BaseAuthenticationBackend(metaclass=abc.ABCMeta):
 
 
 class AuthenticationBackend(BaseAuthenticationBackend):
+    async def get_current_user(
+        self,
+        token: str = fastapi.Depends(oauth2_scheme),
+    ) -> dict:
+        try:
+            payload = jwt.decode(
+                token,
+                settings.secret_key,
+                algorithms=[settings.jwt_algorithm],
+            )
+
+            username: str = payload.get("sub")
+            user_id: int = payload.get("id")
+
+            if username is None or user_id is None:
+                raise exceptions.invalid_token_exception()
+
+            return {"username": username, "id": user_id}
+        except JWTError:
+            raise exceptions.invalid_token_exception()
+
     async def authenticate(
         self,
         username: str,
@@ -285,28 +306,6 @@ def get_authentication_backend():
 
 
 authentication = get_authentication_backend()
-
-
-async def get_current_user(self, token: str = fastapi.Depends(oauth2_scheme)) -> dict:
-    try:
-        payload = jwt.decode(
-            token,
-            settings.secret_key,
-            algorithms=[settings.jwt_algorithm],
-        )
-
-        username: str = payload.get("sub")
-        user_id: int = payload.get("id")
-
-        if username is None or user_id is None:
-            raise exceptions.invalid_token_exception()
-
-        return {"username": username, "id": user_id}
-    except JWTError:
-        raise exceptions.invalid_token_exception()
-
-
-authentication.get_current_user = get_current_user.__get__(authentication)
 
 
 async def get_superuser(
