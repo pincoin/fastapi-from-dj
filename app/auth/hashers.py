@@ -11,11 +11,11 @@ from core.config import settings
 
 class BaseHasher(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def get_hashed_password(self, plain: str) -> str:
+    def get_hashed_password(self, **kwargs) -> str:
         pass
 
     @abc.abstractmethod
-    def verify_password(self, plain: str, encoded: str) -> bool:
+    def verify_password(self, **kwargs) -> bool:
         pass
 
 

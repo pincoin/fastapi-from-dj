@@ -4,68 +4,82 @@ import importlib
 import typing
 from functools import lru_cache
 
+import fastapi
 import sqlalchemy as sa
+from core import exceptions
 from core.config import settings
 from core.crud import CRUDModel
-from jose import jwt
+from core.dependencies import engine_connect
+from jose import JWTError, jwt
 
 from . import hashers, models
+
+oauth2_scheme = fastapi.security.OAuth2PasswordBearer(tokenUrl="/auth/token")
 
 
 class BaseAuthenticationBackend(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    async def authenticate(
-        self,
-        username: str,
-        password: str,
-        conn: sa.ext.asyncio.engine.AsyncConnection,
-    ) -> dict | None:
+    async def authenticate(self, **kwargs) -> dict | None:
         pass
 
     @abc.abstractmethod
-    def create_access_token(
-        self,
-        username: str,
-        user_id: int,
-        expires_delta: datetime.timedelta | None,
-    ) -> typing.Any:
+    def create_access_token(self, **kwargs) -> typing.Any:
         pass
 
     @abc.abstractmethod
-    async def get_user_permissions(
-        self,
-        user_id: int,
-        conn: sa.ext.asyncio.engine.AsyncConnection,
-    ):
+    async def get_user_permissions(self, **kwargs) -> typing.Any:
         pass
 
     @abc.abstractmethod
-    async def get_group_permissions(
-        self,
-        user_id: int,
-        conn: sa.ext.asyncio.engine.AsyncConnection,
-    ):
+    async def get_group_permissions(self, **kwargs) -> typing.Any:
         pass
 
     @abc.abstractmethod
-    async def get_all_permissions(
-        self,
-        user_id: int,
-        conn: sa.ext.asyncio.engine.AsyncConnection,
-    ):
+    async def get_all_permissions(self, **kwargs) -> typing.Any:
         pass
 
     @abc.abstractmethod
-    async def has_perm(
-        self,
-        user_id: int,
-        permission_id: int,
-        conn: sa.ext.asyncio.engine.AsyncConnection,
-    ):
+    async def has_perm(self, **kwargs) -> bool:
         pass
 
 
 class AuthenticationBackend(BaseAuthenticationBackend):
+    async def get_current_user(
+        self,
+        token: str = fastapi.Depends(oauth2_scheme),
+    ) -> dict:
+        try:
+            payload = jwt.decode(
+                token,
+                settings.secret_key,
+                algorithms=[settings.jwt_algorithm],
+            )
+
+            username: str = payload.get("sub")
+            user_id: int = payload.get("id")
+
+            if username is None or user_id is None:
+                raise exceptions.invalid_token_exception()
+
+            return {"username": username, "id": user_id}
+        except JWTError:
+            raise exceptions.invalid_token_exception()
+
+    async def get_superuser(
+        self,
+        current_user: dict = fastapi.Depends(get_current_user),
+        conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
+    ) -> dict:
+        stmt = sa.select(models.users).where(
+            models.users.c.id == current_user["id"],
+            models.users.c.is_active == True,
+            models.users.c.is_superuser == True,
+        )
+
+        row = await CRUDModel(conn).get_one(stmt)
+
+        return row._mapping if row else None
+
     async def authenticate(
         self,
         username: str,
