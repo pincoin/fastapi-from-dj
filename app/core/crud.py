@@ -13,6 +13,8 @@ class CRUDModel:
 
     @contextlib.contextmanager
     def transaction_begin(self):
+        # Prevent transaction nesting
+        # Will be removed in SQLAlchemy 2.0
         if not self.engine_connection.in_transaction():
             with self.engine_connection.begin():
                 yield self.engine_connection

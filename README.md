@@ -54,6 +54,10 @@ Please, change the line as shown below:
 sqlalchemy.url = driver://user:pass@localhost/dbname
 ```
 
+```
+$  alembic upgrade head
+```
+
 ## Run
 You can simply run like this:
 ```
