@@ -9,7 +9,10 @@ from . import exceptions
 
 
 class CRUDModel:
-    def __init__(self, engine_connection: AsyncConnection):
+    def __init__(
+        self,
+        engine_connection: AsyncConnection,
+    ) -> None:
         self.engine_connection = engine_connection
 
     @contextlib.contextmanager
@@ -42,7 +45,7 @@ class CRUDModel:
         if row := cr.first():
             return row
 
-        raise exceptions.item_not_found_exceptsion(item)
+        raise exceptions.item_not_found_exception(item)
 
     async def get_all(
         self,

@@ -1,4 +1,5 @@
 import datetime
+import typing
 
 import fastapi
 import sqlalchemy as sa
@@ -25,7 +26,7 @@ router = fastapi.APIRouter(
 async def login_for_access_token(
     form_data: fastapi.security.OAuth2PasswordRequestForm = fastapi.Depends(),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
-):
+) -> dict:
     user_dict = await authentication.authenticate(
         form_data.username,
         form_data.password,
@@ -60,7 +61,7 @@ async def list_users(
     params: dict = fastapi.Depends(list_params),
     superuser: dict = fastapi.Depends(authentication.get_superuser),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
-):
+) -> list[typing.Any]:
     if superuser is None:
         raise exceptions.forbidden_exception()
 
@@ -88,7 +89,7 @@ async def get_user(
     user_id: int = fastapi.Query(gt=0),
     superuser: dict = fastapi.Depends(authentication.get_superuser),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
-):
+) -> typing.Any:
     if superuser is None:
         raise exceptions.forbidden_exception()
 
@@ -106,7 +107,7 @@ async def create_user(
     user: schemas.UserCreate,
     superuser: dict = fastapi.Depends(authentication.get_superuser),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
-):
+) -> schemas.User:
     if superuser is None:
         raise exceptions.forbidden_exception()
 
@@ -143,7 +144,7 @@ async def update_user(
     user_id: int = fastapi.Query(gt=0),
     superuser: dict = fastapi.Depends(authentication.get_superuser),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
-):
+) -> typing.Any:
     if superuser is None:
         raise exceptions.forbidden_exception()
 
@@ -174,7 +175,7 @@ async def delete_user(
     user_id: int = fastapi.Query(gt=0),
     superuser: dict = fastapi.Depends(authentication.get_superuser),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
-):
+) -> None:
     if superuser is None:
         raise exceptions.forbidden_exception()
 
@@ -192,7 +193,7 @@ async def list_groups_of_user(
     params: dict = fastapi.Depends(list_params),
     superuser: dict = fastapi.Depends(authentication.get_superuser),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
-):
+) -> list[typing.Any]:
     if superuser is None:
         raise exceptions.forbidden_exception()
 
@@ -219,7 +220,7 @@ async def list_permissions_of_user(
     params: dict = fastapi.Depends(list_params),
     superuser: dict = fastapi.Depends(authentication.get_superuser),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
-):
+) -> list[typing.Any]:
     if superuser is None:
         raise exceptions.forbidden_exception()
 
@@ -255,7 +256,7 @@ async def list_content_types(
     model: str | None = fastapi.Query(default=None, max_length=100),
     superuser: dict = fastapi.Depends(authentication.get_superuser),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
-):
+) -> list[typing.Any]:
     if superuser is None:
         raise exceptions.forbidden_exception()
 
@@ -280,7 +281,7 @@ async def get_content_type(
     content_type_id: int = fastapi.Query(default=0, gt=0),
     superuser: dict = fastapi.Depends(authentication.get_superuser),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
-):
+) -> typing.Any:
     if superuser is None:
         raise exceptions.forbidden_exception()
 
@@ -302,7 +303,7 @@ async def create_content_type(
     content_type: schemas.ContentTypeCreate,
     superuser: dict = fastapi.Depends(authentication.get_superuser),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
-):
+) -> schemas.ContentType:
     if superuser is None:
         raise exceptions.forbidden_exception()
 
@@ -328,7 +329,7 @@ async def update_content_type(
     content_type_id: int = fastapi.Query(default=0, gt=0),
     superuser: dict = fastapi.Depends(authentication.get_superuser),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
-):
+) -> typing.Any:
     if superuser is None:
         raise exceptions.forbidden_exception()
 
@@ -361,7 +362,7 @@ async def delete_content_type(
     content_type_id: int = fastapi.Query(default=0, gt=0),
     superuser: dict = fastapi.Depends(authentication.get_superuser),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
-):
+) -> None:
     if superuser is None:
         raise exceptions.forbidden_exception()
 
@@ -381,7 +382,7 @@ async def list_permissions_of_content_type(
     params: dict = fastapi.Depends(list_params),
     superuser: dict = fastapi.Depends(authentication.get_superuser),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
-):
+) -> list[typing.Any]:
     if superuser is None:
         raise exceptions.forbidden_exception()
 
@@ -412,7 +413,7 @@ async def create_permission_of_content_type(
     content_type_id: int = fastapi.Query(gt=0),
     superuser: dict = fastapi.Depends(authentication.get_superuser),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
-):
+) -> schemas.Permission:
     if superuser is None:
         raise exceptions.forbidden_exception()
 
@@ -443,7 +444,7 @@ async def update_permission_of_content_type(
     permission_id: int = fastapi.Query(gt=0),
     superuser: dict = fastapi.Depends(authentication.get_superuser),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
-):
+) -> typing.Any:
     if superuser is None:
         raise exceptions.forbidden_exception()
 
@@ -478,7 +479,7 @@ async def delete_permission_of_content_type(
     permission_id: int = fastapi.Query(gt=0),
     superuser: dict = fastapi.Depends(authentication.get_superuser),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
-):
+) -> None:
     if superuser is None:
         raise exceptions.forbidden_exception()
 
@@ -498,7 +499,7 @@ async def list_groups(
     params: dict = fastapi.Depends(list_params),
     superuser: dict = fastapi.Depends(authentication.get_superuser),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
-):
+) -> list[typing.Any]:
     if superuser is None:
         raise exceptions.forbidden_exception()
 
@@ -515,7 +516,7 @@ async def get_group(
     group_id: int = fastapi.Query(default=0, gt=0),
     superuser: dict = fastapi.Depends(authentication.get_superuser),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
-):
+) -> typing.Any:
     if superuser is None:
         raise exceptions.forbidden_exception()
 
@@ -532,7 +533,7 @@ async def create_group(
     group: schemas.GroupCreate,
     superuser: dict = fastapi.Depends(authentication.get_superuser),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
-):
+) -> schemas.Group:
     if superuser is None:
         raise exceptions.forbidden_exception()
 
@@ -557,7 +558,7 @@ async def update_group(
     group_id: int = fastapi.Query(default=0, gt=0),
     superuser: dict = fastapi.Depends(authentication.get_superuser),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
-):
+) -> typing.Any:
     if superuser is None:
         raise exceptions.forbidden_exception()
 
@@ -588,7 +589,7 @@ async def delete_group(
     group_id: int = fastapi.Query(default=0, gt=0),
     superuser: dict = fastapi.Depends(authentication.get_superuser),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
-):
+) -> None:
     if superuser is None:
         raise exceptions.forbidden_exception()
 
@@ -607,7 +608,7 @@ async def list_users_of_group(
     params: dict = fastapi.Depends(list_params),
     superuser: dict = fastapi.Depends(authentication.get_superuser),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
-):
+) -> list[typing.Any]:
     if superuser is None:
         raise exceptions.forbidden_exception()
 
@@ -634,7 +635,7 @@ async def list_permissions_of_group(
     params: dict = fastapi.Depends(list_params),
     superuser: dict = fastapi.Depends(authentication.get_superuser),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
-):
+) -> list[typing.Any]:
     if superuser is None:
         raise exceptions.forbidden_exception()
 
@@ -669,7 +670,7 @@ async def create_user_of_group(
     user_id: int = fastapi.Query(gt=0),
     superuser: dict = fastapi.Depends(authentication.get_superuser),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
-):
+) -> schemas.UserGroup:
     if superuser is None:
         raise exceptions.forbidden_exception()
 
@@ -699,7 +700,7 @@ async def delete_user_of_group(
     user_id: int = fastapi.Query(gt=0),
     superuser: dict = fastapi.Depends(authentication.get_superuser),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
-):
+) -> None:
     if superuser is None:
         raise exceptions.forbidden_exception()
 
@@ -719,7 +720,7 @@ async def list_permissions(
     params: dict = fastapi.Depends(list_params),
     superuser: dict = fastapi.Depends(authentication.get_superuser),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
-):
+) -> list[typing.Any]:
     if superuser is None:
         raise exceptions.forbidden_exception()
 
@@ -745,7 +746,7 @@ async def get_permission(
     permission_id: int = fastapi.Query(default=0, gt=0),
     superuser: dict = fastapi.Depends(authentication.get_superuser),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
-):
+) -> typing.Any:
     if superuser is None:
         raise exceptions.forbidden_exception()
 
@@ -776,7 +777,7 @@ async def list_users_of_permission(
     permission_id: int = fastapi.Query(gt=0),
     superuser: dict = fastapi.Depends(authentication.get_superuser),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
-):
+) -> list[typing.Any]:
     if superuser is None:
         raise exceptions.forbidden_exception()
 
@@ -802,7 +803,7 @@ async def list_groups_of_permission(
     params: dict = fastapi.Depends(list_params),
     superuser: dict = fastapi.Depends(authentication.get_superuser),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
-):
+) -> list[typing.Any]:
     if superuser is None:
         raise exceptions.forbidden_exception()
 
@@ -829,7 +830,7 @@ async def create_permission_of_user(
     user_id: int = fastapi.Query(gt=0),
     superuser: dict = fastapi.Depends(authentication.get_superuser),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
-):
+) -> schemas.UserPermission:
     if superuser is None:
         raise exceptions.forbidden_exception()
 
@@ -859,7 +860,7 @@ async def delete_permission_of_user(
     user_id: int = fastapi.Query(gt=0),
     superuser: dict = fastapi.Depends(authentication.get_superuser),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
-):
+) -> None:
     if superuser is None:
         raise exceptions.forbidden_exception()
 
@@ -880,7 +881,7 @@ async def create_permission_of_group(
     group_id: int = fastapi.Query(gt=0),
     superuser: dict = fastapi.Depends(authentication.get_superuser),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
-):
+) -> schemas.GroupPermission:
     if superuser is None:
         raise exceptions.forbidden_exception()
 
@@ -910,7 +911,7 @@ async def delete_permission_of_group(
     group_id: int = fastapi.Query(gt=0),
     superuser: dict = fastapi.Depends(authentication.get_superuser),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
-):
+) -> None:
     if superuser is None:
         raise exceptions.forbidden_exception()
 
@@ -931,7 +932,7 @@ async def list_content_types_of_permission(
     params: dict = fastapi.Depends(list_params),
     superuser: dict = fastapi.Depends(authentication.get_superuser),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
-):
+) -> list[typing.Any]:
     if superuser is None:
         raise exceptions.forbidden_exception()
 

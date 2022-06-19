@@ -119,7 +119,7 @@ class AuthenticationBackend(BaseAuthenticationBackend):
         self,
         user_id: int,
         conn: sa.ext.asyncio.engine.AsyncConnection,
-    ):
+    ) -> list[typing.Any]:
         # permissions belongs to user
         stmt = (
             sa.select(
@@ -151,7 +151,7 @@ class AuthenticationBackend(BaseAuthenticationBackend):
         self,
         user_id: int,
         conn: sa.ext.asyncio.engine.AsyncConnection,
-    ):
+    ) -> list[typing.Any]:
         # permissions belongs to group which belongs to user
         stmt = (
             sa.select(
@@ -191,7 +191,7 @@ class AuthenticationBackend(BaseAuthenticationBackend):
         self,
         user_id: int,
         conn: sa.ext.asyncio.engine.AsyncConnection,
-    ):
+    ) -> list[typing.Any]:
         # 1. Caching required!
         # 2. Rules assumption required for tuning
         # - Rule 1: User-Permission many-to-many relations are disabled.
@@ -262,7 +262,7 @@ class AuthenticationBackend(BaseAuthenticationBackend):
         user_id: int,
         permission_id: int,
         conn: sa.ext.asyncio.engine.AsyncConnection,
-    ):
+    ) -> bool:
         perms = await self.get_all_permissions(user_id, conn)
         return any(d["id"] == permission_id for d in [perm._mapping for perm in perms])
 
@@ -271,7 +271,7 @@ class AuthenticationBackend(BaseAuthenticationBackend):
         user_id: int,
         app_label: str,
         conn: sa.ext.asyncio.engine.AsyncConnection,
-    ):
+    ) -> bool:
         perms = await self.get_all_permissions(user_id, conn)
         return any(
             d["app_label"] == app_label for d in [perm._mapping for perm in perms]
@@ -283,7 +283,7 @@ class AuthenticationBackend(BaseAuthenticationBackend):
         conn: sa.ext.asyncio.engine.AsyncConnection,
         is_active=True,
         include_superusers=True,
-    ):
+    ) -> list[typing.Any]:
         stmt = (
             sa.select(models.users)
             .join_from(
