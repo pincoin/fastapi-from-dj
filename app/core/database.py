@@ -16,8 +16,8 @@ engine = create_async_engine(
 
 
 @lru_cache(maxsize=1)
-def get_metadata():
+def get_metadata() -> sa.sql.schema.MetaData:
     return sa.MetaData()
 
 
-metadata = get_metadata()
+metadata: sa.sql.schema.MetaData = get_metadata()

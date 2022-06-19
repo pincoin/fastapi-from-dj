@@ -5,5 +5,5 @@ async def list_params(
     q: str | None = None,
     skip: int = fastapi.Query(default=0, ge=0),
     take: int = fastapi.Query(default=100, le=100),
-):
+) -> dict:
     return {"q": q, "skip": skip, "take": take}

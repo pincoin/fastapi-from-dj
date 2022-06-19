@@ -1,4 +1,5 @@
 import contextlib
+import typing
 
 import sqlalchemy as sa
 from pydantic import BaseModel
@@ -12,7 +13,7 @@ class CRUDModel:
         self.engine_connection = engine_connection
 
     @contextlib.contextmanager
-    def transaction_begin(self):
+    def transaction_begin(self) -> typing.Generator:
         # Prevent transaction nesting
         # Will be removed in SQLAlchemy 2.0
         if not self.engine_connection.in_transaction():
@@ -27,7 +28,7 @@ class CRUDModel:
     async def get_one(
         self,
         statement,
-    ):
+    ) -> typing.Any:
         cr: sa.engine.CursorResult = await self.engine_connection.execute(statement)
         return cr.first()
 
@@ -35,7 +36,7 @@ class CRUDModel:
         self,
         statement,
         item: str = "Item",
-    ):
+    ) -> typing.Any:
         cr: sa.engine.CursorResult = await self.engine_connection.execute(statement)
 
         if row := cr.first():
@@ -46,14 +47,14 @@ class CRUDModel:
     async def get_all(
         self,
         statement,
-    ):
+    ) -> list[typing.Any]:
         cr: sa.engine.CursorResult = await self.engine_connection.execute(statement)
         return cr.fetchall()
 
     async def insert(
         self,
         statement,
-    ):
+    ) -> int:
         with self.transaction_begin():
             cr: sa.engine.CursorResult = await self.engine_connection.execute(statement)
             await self.engine_connection.commit()
@@ -65,7 +66,7 @@ class CRUDModel:
         statement,
         dict_in: dict,
         model_out: BaseModel,
-    ):
+    ) -> typing.Any:
         # 1. Fetch saved row from database
         stmt = sa.select(statement.table).where(statement.whereclause)
         row = await CRUDModel(self.engine_connection).get_one_or_404(
@@ -89,7 +90,7 @@ class CRUDModel:
         self,
         statement,
         item: str = "Item",
-    ):
+    ) -> None:
         with self.transaction_begin():
             cr: sa.engine.CursorResult = await self.engine_connection.execute(statement)
             await self.engine_connection.commit()

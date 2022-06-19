@@ -74,10 +74,10 @@ class Pbkdf2Sha256Hasher(BaseHasher):
 
 
 @lru_cache(maxsize=1)
-def get_hasher():
+def get_hasher() -> BaseHasher:
     m, c = settings.password_hasher.rsplit(".", 1)
     PasswordHasherClass = getattr(importlib.import_module(m), c)
     return PasswordHasherClass()
 
 
-hasher = get_hasher()
+hasher: BaseHasher = get_hasher()

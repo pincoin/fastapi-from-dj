@@ -303,13 +303,13 @@ class AuthenticationBackend(BaseAuthenticationBackend):
 
 
 @lru_cache(maxsize=1)
-def get_authentication_backend():
+def get_authentication_backend() -> BaseAuthenticationBackend:
     m, c = settings.authentication_backend.rsplit(".", 1)
     AuthenticationBackendClass = getattr(importlib.import_module(m), c)
     return AuthenticationBackendClass()
 
 
-authentication = get_authentication_backend()
+authentication: BaseAuthenticationBackend = get_authentication_backend()
 
 
 async def get_superuser(

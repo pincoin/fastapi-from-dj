@@ -1,14 +1,14 @@
 from fastapi import HTTPException, status
 
 
-def bad_request_exception():
+def bad_request_exception() -> HTTPException:
     return HTTPException(
         status_code=status.HTTP_400_BAD_REQUEST,
         detail="Bad Request",
     )
 
 
-def invalid_credentials_exception():
+def invalid_credentials_exception() -> HTTPException:
     return HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Invalid username or password",
@@ -16,7 +16,7 @@ def invalid_credentials_exception():
     )
 
 
-def invalid_token_exception():
+def invalid_token_exception() -> HTTPException:
     return HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Invalid token",
@@ -24,21 +24,21 @@ def invalid_token_exception():
     )
 
 
-def forbidden_exception():
+def forbidden_exception() -> HTTPException:
     return HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
         detail="Forbidden",
     )
 
 
-def item_not_found_exception(item):
+def item_not_found_exception(item) -> HTTPException:
     return HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
         detail=f"{item} Not Found",
     )
 
 
-def conflict_exception():
+def conflict_exception() -> HTTPException:
     return HTTPException(
         status_code=status.HTTP_409_CONFLICT,
         detail="Integrity error",
