@@ -42,9 +42,9 @@ You may create the `app/production.env` separate file for the production server,
 
 All `*.env` files are hidden for security by `.gitignore`.
 
-You can substitute `authentication_backend` and `password_hasher` with your own algorithms. Please, make sure what methods has t be implemented.
+You can substitute `authentication_backend` and `password_hasher` with your own algorithms. Please, make sure what methods have to be implemented.
 
-Please don't forget to add `get_superuser` method into an `authentication` instance dynamically. Python does not allow `self` parameter is accessed in the parameter list of a method during method declarations.
+Please don't forget to add `get_superuser` method dynamically into an `authentication` instance of your backend class. Python does not allow `self` parameter is accessed in the parameter list of a method during method declarations. It is not always a good idea to add a method into an instance dynamically, but we have no choice if we want to make authentication dependencies and methods live together.
 
 ## Alembic migrations
 `psycopg2-binary` is required because Alembic works synchronously.
