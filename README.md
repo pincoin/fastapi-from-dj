@@ -54,6 +54,7 @@ Please, change the line as shown below:
 sqlalchemy.url = driver://user:pass@localhost/dbname
 ```
 
+Now, you can migrate by issuing this command in the parent directory of `alembic/`:
 ```
 $  alembic upgrade head
 ```
