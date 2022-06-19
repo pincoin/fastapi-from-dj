@@ -20,7 +20,7 @@ class CRUDModel:
                 yield self.engine_connection
         else:
             """
-            BEGIN (implicit)
+            BEGIN (implicit) by PostgreSQL
             """
             yield self.engine_connection
 
@@ -57,6 +57,7 @@ class CRUDModel:
         with self.transaction_begin():
             cr: sa.engine.CursorResult = await self.engine_connection.execute(statement)
             await self.engine_connection.commit()
+
         return cr.inserted_primary_key[0]
 
     async def update_or_failure(

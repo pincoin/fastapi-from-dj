@@ -7,8 +7,7 @@ from .config import settings
 
 kwargs = {"echo": settings.debug}
 
-# SQLAlchemy engine instance
-# lazy initialization
+# SQLAlchemy engine instance (lazy initialization)
 engine = create_async_engine(
     # dialect+driver://username:password@host:port/database
     settings.sqlalchemy_database_uri,

@@ -19,6 +19,10 @@ oauth2_scheme = fastapi.security.OAuth2PasswordBearer(tokenUrl="/auth/token")
 
 class BaseAuthenticationBackend(metaclass=abc.ABCMeta):
     @abc.abstractmethod
+    async def get_current_user(self, **kwargs) -> dict:
+        pass
+
+    @abc.abstractmethod
     async def authenticate(self, **kwargs) -> dict | None:
         pass
 
@@ -309,7 +313,7 @@ authentication = get_authentication_backend()
 
 
 async def get_superuser(
-    self,
+    self,  # This is a method to be bound.
     current_user: dict = fastapi.Depends(authentication.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ) -> dict:
@@ -324,4 +328,5 @@ async def get_superuser(
     return row._mapping if row else None
 
 
+# Add a method into an instance dynamically
 authentication.get_superuser = get_superuser.__get__(authentication)

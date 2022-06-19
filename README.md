@@ -42,6 +42,10 @@ You may create the `app/production.env` separate file for the production server,
 
 All `*.env` files are hidden for security by `.gitignore`.
 
+You can substitute `authentication_backend` and `password_hasher` with your own algorithms. Please, make sure what methods has t be implemented.
+
+Please don't forget to add `get_superuser` method into an `authentication` instance dynamically. Python does not allow `self` parameter is accessed in the parameter list of a method during method declarations.
+
 ## Alembic migrations
 `psycopg2-binary` is required because Alembic works synchronously.
 
@@ -122,3 +126,16 @@ Cons
 * Higher maintenance costs for more complex systems
 * Session not supported
 * Smaller community compared to Django
+
+# Topics for study
+* Pydantic validation
+    * Path parameters
+    * Query parameters
+    * Raw JSON body
+    * Form data
+    * Masking response
+* SQLAlchemy
+    * Ready for 2.0
+    * Prevent nested transactions
+* FastAPI dependencies are cached.
+* Simple singleton is implemented by LRU cache.
