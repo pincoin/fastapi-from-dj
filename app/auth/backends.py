@@ -277,7 +277,17 @@ class AuthenticationBackend(BaseAuthenticationBackend):
         return await CRUDModel(conn).get_all(stmt)
 
 
-async def get_current_user(token: str = fastapi.Depends(oauth2_scheme)) -> dict:
+@lru_cache(maxsize=1)
+def get_authentication_backend():
+    m, c = settings.authentication_backend.rsplit(".", 1)
+    AuthenticationBackendClass = getattr(importlib.import_module(m), c)
+    return AuthenticationBackendClass()
+
+
+authentication = get_authentication_backend()
+
+
+async def get_current_user(self, token: str = fastapi.Depends(oauth2_scheme)) -> dict:
     try:
         payload = jwt.decode(
             token,
@@ -296,8 +306,12 @@ async def get_current_user(token: str = fastapi.Depends(oauth2_scheme)) -> dict:
         raise exceptions.invalid_token_exception()
 
 
+authentication.get_current_user = get_current_user.__get__(authentication)
+
+
 async def get_superuser(
-    current_user: dict = fastapi.Depends(get_current_user),
+    self,
+    current_user: dict = fastapi.Depends(authentication.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ) -> dict:
     stmt = sa.select(models.users).where(
@@ -311,11 +325,4 @@ async def get_superuser(
     return row._mapping if row else None
 
 
-@lru_cache(maxsize=1)
-def get_authentication_backend():
-    m, c = settings.authentication_backend.rsplit(".", 1)
-    AuthenticationBackendClass = getattr(importlib.import_module(m), c)
-    return AuthenticationBackendClass()
-
-
-authentication = get_authentication_backend()
+authentication.get_superuser = get_superuser.__get__(authentication)
