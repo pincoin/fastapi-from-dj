@@ -3,7 +3,7 @@ import sqlalchemy as sa
 from core import exceptions
 from core.config import settings
 from core.crud import CRUDModel
-from core.dependencies import engine_begin, engine_connect
+from core.dependencies import engine_connect
 from jose import JWTError, jwt
 
 from . import models

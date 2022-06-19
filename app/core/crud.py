@@ -1,3 +1,5 @@
+import contextlib
+
 import sqlalchemy as sa
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio.engine import AsyncConnection
@@ -6,14 +8,25 @@ from . import exceptions
 
 
 class CRUDModel:
-    def __init__(self, conn: AsyncConnection):
-        self.conn = conn
+    def __init__(self, engine_connection: AsyncConnection):
+        self.engine_connection = engine_connection
+
+    @contextlib.contextmanager
+    def transaction_begin(self):
+        if not self.engine_connection.in_transaction():
+            with self.engine_connection.begin():
+                yield self.engine_connection
+        else:
+            """
+            BEGIN (implicit)
+            """
+            yield self.engine_connection
 
     async def get_one(
         self,
         statement,
     ):
-        cr: sa.engine.CursorResult = await self.conn.execute(statement)
+        cr: sa.engine.CursorResult = await self.engine_connection.execute(statement)
         return cr.first()
 
     async def get_one_or_404(
@@ -21,7 +34,7 @@ class CRUDModel:
         statement,
         item: str = "Item",
     ):
-        cr: sa.engine.CursorResult = await self.conn.execute(statement)
+        cr: sa.engine.CursorResult = await self.engine_connection.execute(statement)
 
         if row := cr.first():
             return row
@@ -32,14 +45,16 @@ class CRUDModel:
         self,
         statement,
     ):
-        cr: sa.engine.CursorResult = await self.conn.execute(statement)
+        cr: sa.engine.CursorResult = await self.engine_connection.execute(statement)
         return cr.fetchall()
 
     async def insert(
         self,
         statement,
     ):
-        cr: sa.engine.CursorResult = await self.conn.execute(statement)
+        with self.transaction_begin():
+            cr: sa.engine.CursorResult = await self.engine_connection.execute(statement)
+            await self.engine_connection.commit()
         return cr.inserted_primary_key[0]
 
     async def update_or_failure(
@@ -50,7 +65,9 @@ class CRUDModel:
     ):
         # 1. Fetch saved row from database
         stmt = sa.select(statement.table).where(statement.whereclause)
-        row = await CRUDModel(self.conn).get_one_or_404(stmt, model_out.Config().title)
+        row = await CRUDModel(self.engine_connection).get_one_or_404(
+            stmt, model_out.Config().title
+        )
 
         # 2. Create pydantic model instance from fetched row dict
         model = model_out(**row._mapping)
@@ -59,7 +76,9 @@ class CRUDModel:
         model_new = model.copy(update=dict_in)
 
         # 4. Execute upate query
-        await self.conn.execute(statement.values(**model_new.dict()))
+        with self.transaction_begin():
+            await self.engine_connection.execute(statement.values(**model_new.dict()))
+            await self.engine_connection.commit()
 
         return model_new
 
@@ -68,7 +87,9 @@ class CRUDModel:
         statement,
         item: str = "Item",
     ):
-        cr: sa.engine.CursorResult = await self.conn.execute(statement)
+        with self.transaction_begin():
+            cr: sa.engine.CursorResult = await self.engine_connection.execute(statement)
+            await self.engine_connection.commit()
 
         if cr.rowcount > 0:
             return None
