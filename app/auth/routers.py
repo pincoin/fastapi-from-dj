@@ -8,7 +8,7 @@ from core.crud import CRUDModel
 from core.dependencies import engine_connect
 from core.utils import list_params
 
-from . import backends, hashers, models, schemas
+from . import hashers, models, schemas
 from .backends import authentication
 
 router = fastapi.APIRouter(
