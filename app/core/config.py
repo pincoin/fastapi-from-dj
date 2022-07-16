@@ -13,7 +13,9 @@ class Settings(BaseSettings):
     port: int = 8000
 
     jwt_access_secret_key: str = Field(min_length=32)
+    jwt_access_expire_minutes: int = 30
     jwt_refresh_secret_key: str = Field(min_length=32)
+    jwt_refresh_expire_days: int = 14
     jwt_algorithm: str = "HS256"
     password_hasher = "auth.hashers.Pbkdf2Sha256Hasher"
     authentication_backend = "auth.backends.AuthenticationBackend"

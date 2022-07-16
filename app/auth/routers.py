@@ -4,6 +4,7 @@ import typing
 import fastapi
 import sqlalchemy as sa
 from core import exceptions
+from core.config import settings
 from core.crud import CRUDModel
 from core.dependencies import engine_connect
 from core.utils import list_params
@@ -36,14 +37,18 @@ async def login_for_tokens(
     if not user_dict:
         raise exceptions.invalid_credentials_exception()
 
-    access_token_expires = datetime.timedelta(minutes=30)
+    access_token_expires = datetime.timedelta(
+        minutes=settings.jwt_access_expire_minutes,
+    )
     access_token = authentication.create_access_token(
         user_dict["username"],
         user_dict["id"],
         expires_delta=access_token_expires,
     )
 
-    refresh_token_expires = datetime.timedelta(days=14)
+    refresh_token_expires = datetime.timedelta(
+        days=settings.jwt_refresh_expire_days,
+    )
     refresh_token = authentication.create_refresh_token(
         user_dict["username"],
         user_dict["id"],
@@ -67,7 +72,9 @@ async def get_access_token(
     if user is None:
         raise exceptions.forbidden_exception()
 
-    access_token_expires = datetime.timedelta(minutes=30)
+    access_token_expires = datetime.timedelta(
+        minutes=settings.jwt_access_expire_minutes,
+    )
     access_token = authentication.create_access_token(
         user["username"],
         user["id"],
@@ -90,7 +97,9 @@ async def get_refresh_token(
     if user is None:
         raise exceptions.forbidden_exception()
 
-    refresh_token_expires = datetime.timedelta(days=14)
+    refresh_token_expires = datetime.timedelta(
+        days=settings.jwt_refresh_expire_days,
+    )
     refresh_token = authentication.create_refresh_token(
         user["username"],
         user["id"],
