@@ -8,6 +8,8 @@ from core.config import settings
 from core.crud import CRUDModel
 from core.dependencies import engine_connect
 from core.utils import list_params
+from fastapi.param_functions import Form
+from jose import JWTError, jwt
 
 from . import hashers, models, schemas
 from .backends import authentication
@@ -20,75 +22,109 @@ router = fastapi.APIRouter(
 )
 
 
-@router.post(
-    "/tokens",
-    response_model=schemas.Token,
-)
-async def login_for_tokens(
-    form_data: fastapi.security.OAuth2PasswordRequestForm = fastapi.Depends(),
-    conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
-) -> dict:
-    user_dict = await authentication.authenticate(
-        form_data.username,
-        form_data.password,
-        conn,
-    )
-
-    if not user_dict:
-        raise exceptions.invalid_credentials_exception()
-
-    access_token_expires = datetime.timedelta(
-        minutes=settings.jwt_access_expire_minutes,
-    )
-    access_token = authentication.create_access_token(
-        user_dict["username"],
-        user_dict["id"],
-        expires_delta=access_token_expires,
-    )
-
-    refresh_token_expires = datetime.timedelta(
-        days=settings.jwt_refresh_expire_days,
-    )
-    refresh_token = authentication.create_refresh_token(
-        user_dict["username"],
-        user_dict["id"],
-        expires_delta=refresh_token_expires,
-    )
-
-    return {
-        "access_token": access_token,
-        "refresh_token": refresh_token,
-        "token_type": "bearer",
-    }
+class OAuth2RequestForm:
+    def __init__(
+        self,
+        grant_type: str = Form(default=None, regex="password|refresh_token"),
+        username: str | None = Form(default=None),
+        password: str | None = Form(default=None),
+        refresh_token: str | None = Form(default=None),
+        scope: str = Form(default=""),
+        client_id: str | None = Form(default=None),
+        client_secret: str | None = Form(default=None),
+    ):
+        self.grant_type = grant_type
+        self.username = username
+        self.password = password
+        self.refresh_token = refresh_token
+        self.scopes = scope.split()
+        self.client_id = client_id
+        self.client_secret = client_secret
 
 
 @router.post(
-    "/tokens/access",
-    response_model=schemas.AccessToken,
+    "/token",
+    # response model is not specified to support both grant type `password` and `refresh_token`.
 )
 async def get_access_token(
-    user: dict = fastapi.Depends(authentication.get_current_user_by_refresh_token),
+    form_data: OAuth2RequestForm = fastapi.Depends(),
+    conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ) -> dict:
-    if user is None:
-        raise exceptions.forbidden_exception()
+    if form_data.grant_type == "password" and form_data.username and form_data.password:
+        user_dict = await authentication.authenticate(
+            form_data.username,
+            form_data.password,
+            conn,
+        )
 
-    access_token_expires = datetime.timedelta(
-        minutes=settings.jwt_access_expire_minutes,
-    )
-    access_token = authentication.create_access_token(
-        user["username"],
-        user["id"],
-        expires_delta=access_token_expires,
-    )
+        if not user_dict:
+            raise exceptions.invalid_credentials_exception()
 
-    return {
-        "access_token": access_token,
-        "token_type": "bearer",
-    }
+        access_token_expires = datetime.timedelta(
+            minutes=settings.jwt_access_expire_minutes,
+        )
+        access_token = authentication.create_access_token(
+            user_dict["username"],
+            user_dict["id"],
+            expires_delta=access_token_expires,
+        )
+
+        refresh_token_expires = datetime.timedelta(
+            days=settings.jwt_refresh_expire_days,
+        )
+        refresh_token = authentication.create_refresh_token(
+            user_dict["username"],
+            user_dict["id"],
+            expires_delta=refresh_token_expires,
+        )
+
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer",
+        }
+
+    elif form_data.grant_type == "refresh_token" and form_data.refresh_token:
+        try:
+            payload = jwt.decode(
+                form_data.refresh_token,
+                settings.jwt_refresh_secret_key,
+                algorithms=[settings.jwt_algorithm],
+            )
+
+            if (
+                datetime.datetime.fromtimestamp(payload["exp"])
+                < datetime.datetime.now()
+            ):
+                raise exceptions.invalid_token_exception()
+
+            username: str = payload.get("sub")
+            user_id: int = payload.get("id")
+
+            if username is None or user_id is None:
+                raise exceptions.invalid_token_exception()
+
+            access_token_expires = datetime.timedelta(
+                minutes=settings.jwt_access_expire_minutes,
+            )
+            access_token = authentication.create_access_token(
+                username,
+                user_id,
+                expires_delta=access_token_expires,
+            )
+
+            return {
+                "access_token": access_token,
+                "token_type": "bearer",
+            }
+        except JWTError:
+            raise exceptions.invalid_token_exception()
+
+    raise exceptions.bad_request_exception()
 
 
 @router.post(
-    "/tokens/refresh",
+    "/refresh",
     response_model=schemas.RefreshToken,
 )
 async def get_refresh_token(
@@ -105,6 +141,7 @@ async def get_refresh_token(
         user["id"],
         expires_delta=refresh_token_expires,
     )
+
     return {
         "refresh_token": refresh_token,
         "token_type": "bearer",
