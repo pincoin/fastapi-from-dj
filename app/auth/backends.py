@@ -14,7 +14,7 @@ from jose import JWTError, jwt
 
 from . import hashers, models
 
-oauth2_scheme = fastapi.security.OAuth2PasswordBearer(tokenUrl="/auth/token")
+oauth2_scheme = fastapi.security.OAuth2PasswordBearer(tokenUrl="/auth/tokens")
 
 
 class BaseAuthenticationBackend(metaclass=abc.ABCMeta):
@@ -28,6 +28,10 @@ class BaseAuthenticationBackend(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def create_access_token(self, **kwargs) -> typing.Any:
+        pass
+
+    @abc.abstractmethod
+    def create_refresh_token(self, **kwargs) -> typing.Any:
         pass
 
     @abc.abstractmethod
@@ -55,9 +59,42 @@ class AuthenticationBackend(BaseAuthenticationBackend):
         try:
             payload = jwt.decode(
                 token,
-                settings.secret_key,
+                settings.jwt_access_secret_key,
                 algorithms=[settings.jwt_algorithm],
             )
+
+            if (
+                datetime.datetime.fromtimestamp(payload["exp"])
+                < datetime.datetime.now()
+            ):
+                raise exceptions.invalid_token_exception()
+
+            username: str = payload.get("sub")
+            user_id: int = payload.get("id")
+
+            if username is None or user_id is None:
+                raise exceptions.invalid_token_exception()
+
+            return {"username": username, "id": user_id}
+        except JWTError:
+            raise exceptions.invalid_token_exception()
+
+    async def get_current_user_by_refresh_token(
+        self,
+        token: str = fastapi.Depends(oauth2_scheme),
+    ) -> dict:
+        try:
+            payload = jwt.decode(
+                token,
+                settings.jwt_refresh_secret_key,
+                algorithms=[settings.jwt_algorithm],
+            )
+
+            if (
+                datetime.datetime.fromtimestamp(payload["exp"])
+                < datetime.datetime.now()
+            ):
+                raise exceptions.invalid_token_exception()
 
             username: str = payload.get("sub")
             user_id: int = payload.get("id")
@@ -111,7 +148,30 @@ class AuthenticationBackend(BaseAuthenticationBackend):
 
         return jwt.encode(
             payload,
-            settings.secret_key,
+            settings.jwt_access_secret_key,
+            algorithm=settings.jwt_algorithm,
+        )
+
+    def create_refresh_token(
+        self,
+        username: str,
+        user_id: int,
+        expires_delta: datetime.timedelta | None,
+    ) -> typing.Any:
+        if expires_delta:
+            expire = datetime.datetime.utcnow() + expires_delta
+        else:
+            expire = datetime.datetime.utcnow() + datetime.timedelta(days=14)
+
+        payload = {
+            "sub": username,
+            "id": user_id,
+            "exp": expire,
+        }
+
+        return jwt.encode(
+            payload,
+            settings.jwt_refresh_secret_key,
             algorithm=settings.jwt_algorithm,
         )
 

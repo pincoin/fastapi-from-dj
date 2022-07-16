@@ -20,10 +20,10 @@ router = fastapi.APIRouter(
 
 
 @router.post(
-    "/token",
+    "/tokens",
     response_model=schemas.Token,
 )
-async def login_for_access_token(
+async def login_for_tokens(
     form_data: fastapi.security.OAuth2PasswordRequestForm = fastapi.Depends(),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ) -> dict:
@@ -42,8 +42,62 @@ async def login_for_access_token(
         user_dict["id"],
         expires_delta=access_token_expires,
     )
+
+    refresh_token_expires = datetime.timedelta(days=14)
+    refresh_token = authentication.create_refresh_token(
+        user_dict["username"],
+        user_dict["id"],
+        expires_delta=refresh_token_expires,
+    )
+
     return {
         "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer",
+    }
+
+
+@router.post(
+    "/tokens/access",
+    response_model=schemas.AccessToken,
+)
+async def get_access_token(
+    user: dict = fastapi.Depends(authentication.get_current_user_by_refresh_token),
+) -> dict:
+    if user is None:
+        raise exceptions.forbidden_exception()
+
+    access_token_expires = datetime.timedelta(minutes=30)
+    access_token = authentication.create_access_token(
+        user["username"],
+        user["id"],
+        expires_delta=access_token_expires,
+    )
+
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+    }
+
+
+@router.post(
+    "/tokens/refresh",
+    response_model=schemas.RefreshToken,
+)
+async def get_refresh_token(
+    user: dict = fastapi.Depends(authentication.get_current_user),
+) -> dict:
+    if user is None:
+        raise exceptions.forbidden_exception()
+
+    refresh_token_expires = datetime.timedelta(days=14)
+    refresh_token = authentication.create_refresh_token(
+        user["username"],
+        user["id"],
+        expires_delta=refresh_token_expires,
+    )
+    return {
+        "refresh_token": refresh_token,
         "token_type": "bearer",
     }
 
