@@ -59,7 +59,7 @@ class AuthenticationBackend(BaseAuthenticationBackend):
         try:
             payload = jwt.decode(
                 token,
-                settings.jwt_access_secret_key,
+                settings.jwt_secret_key,
                 algorithms=[settings.jwt_algorithm],
             )
 
@@ -121,7 +121,7 @@ class AuthenticationBackend(BaseAuthenticationBackend):
 
         return jwt.encode(
             payload,
-            settings.jwt_access_secret_key,
+            settings.jwt_secret_key,
             algorithm=settings.jwt_algorithm,
         )
 

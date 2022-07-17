@@ -31,10 +31,10 @@ Python 3.10 and above
 app_name="FastAPI from Django"
 debug=True
 uvicorn_reload=True
-jwt_access_secret_key="Minimum-length-32-secret-key-string-for-HS256"
-jwt_access_expire_minutes=30
+jwt_secret_key="Minimum-length-32-secret-key-string-for-HS256"
+jwt_expiration_delta=30
 jwt_refresh_secret_key="Minimum-length-32-secret-key-string-for-HS256"
-jwt_refresh_expire_days=14
+jwt_refresh_expiration_delta=14
 jwt_algorithm="HS256"
 password_hasher="auth.hashers.Pbkdf2Sha256Hasher"
 authentication_backend="auth.backends.AuthenticationBackend"
