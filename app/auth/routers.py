@@ -70,7 +70,7 @@ async def get_access_token(
         )
 
         refresh_token_expires = datetime.timedelta(
-            days=settings.jwt_refresh_expiration_delta,
+            minutes=settings.jwt_refresh_expiration_delta,
         )
         refresh_token = authentication.create_refresh_token(
             user_dict["username"],
@@ -134,7 +134,7 @@ async def get_refresh_token(
         raise exceptions.forbidden_exception()
 
     refresh_token_expires = datetime.timedelta(
-        days=settings.jwt_refresh_expiration_delta,
+        minutes=settings.jwt_refresh_expiration_delta,
     )
     refresh_token = authentication.create_refresh_token(
         user["username"],
