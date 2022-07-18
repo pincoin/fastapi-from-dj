@@ -47,6 +47,7 @@ class OAuth2RequestForm:
     # response model is not specified to support both grant type `password` and `refresh_token`.
 )
 async def get_access_token(
+    response: fastapi.Response,
     form_data: OAuth2RequestForm = fastapi.Depends(),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ) -> dict:
@@ -77,6 +78,8 @@ async def get_access_token(
             user_dict["id"],
             expires_delta=refresh_token_expires,
         )
+
+        response.headers["cache-control"] = "no-store"
 
         return {
             "access_token": access_token,
@@ -113,6 +116,8 @@ async def get_access_token(
                 expires_delta=access_token_expires,
             )
 
+            response.headers["cache-control"] = "no-store"
+
             return {
                 "access_token": access_token,
                 "token_type": "bearer",
@@ -128,6 +133,7 @@ async def get_access_token(
     response_model=schemas.RefreshToken,
 )
 async def get_refresh_token(
+    response: fastapi.Response,
     user: dict = fastapi.Depends(authentication.get_current_user),
 ) -> dict:
     if user is None:
@@ -141,6 +147,8 @@ async def get_refresh_token(
         user["id"],
         expires_delta=refresh_token_expires,
     )
+
+    response.headers["cache-control"] = "no-store"
 
     return {
         "refresh_token": refresh_token,
