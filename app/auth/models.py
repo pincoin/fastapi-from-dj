@@ -344,3 +344,36 @@ django_migrations = sa.Table(
         sa.types.TIMESTAMP(timezone=True),
     ),
 )
+
+
+tokens = sa.Table(
+    "auth_token",
+    metadata,
+    sa.Column(
+        "id",
+        sa.BigInteger,
+        primary_key=True,
+        index=True,
+    ),
+    sa.Column(
+        "user_id",
+        sa.BigInteger,
+        sa.ForeignKey(
+            "auth_user.id",
+            onupdate="CASCADE",
+            ondelete="CASCADE",
+            deferrable=True,
+            initially="IMMEDIATE",
+        ),
+        index=True,
+    ),
+    sa.Column(
+        "refresh_token",
+        sa.String,
+    ),
+    sa.Column(
+        "expire_date",
+        sa.types.TIMESTAMP(timezone=True),
+        index=True,
+    ),
+)
