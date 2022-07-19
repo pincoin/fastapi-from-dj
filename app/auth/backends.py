@@ -3,6 +3,7 @@ import datetime
 import importlib
 import typing
 from functools import lru_cache
+from webbrowser import get
 
 import fastapi
 import sqlalchemy as sa
@@ -10,9 +11,12 @@ from core import exceptions
 from core.config import settings
 from core.dependencies import engine_connect
 from core.persistence import Persistence
+from core.utils import get_logger
 from jose import JWTError, jwt
 
 from . import hashers, models
+
+logger = get_logger(__name__)
 
 oauth2_scheme = fastapi.security.OAuth2PasswordBearer(tokenUrl="/auth/token")
 

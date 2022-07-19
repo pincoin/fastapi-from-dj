@@ -7,12 +7,14 @@ from core import exceptions
 from core.config import settings
 from core.dependencies import engine_connect
 from core.persistence import Persistence
-from core.utils import list_params
+from core.utils import get_logger, list_params
 from fastapi.param_functions import Form
 from jose import JWTError, jwt
 
 from . import hashers, models, schemas
 from .backends import authentication
+
+logger = get_logger(__name__)
 
 router = fastapi.APIRouter(
     prefix="/auth",
