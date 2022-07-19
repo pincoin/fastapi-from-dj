@@ -130,3 +130,6 @@ class Token(BaseModel):
     token: str
     expiration_time_delta: datetime.timedelta
     created: datetime.datetime
+
+    class Config:
+        title = "OAuth2 Token"

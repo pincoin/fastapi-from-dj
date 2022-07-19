@@ -71,6 +71,8 @@ class Persistence:
     ) -> int:
         cr: sa.engine.CursorResult = await self.engine_connection.execute(statement)
 
+        await self.engine_connection.commit()
+
         return cr.inserted_primary_key[0]
 
     async def update_or_failure(
@@ -94,6 +96,8 @@ class Persistence:
         # 4. Execute upate query
         await self.engine_connection.execute(statement.values(**model_new.dict()))
 
+        await self.engine_connection.commit()
+
         return model_new
 
     async def delete_one_or_404(
@@ -102,6 +106,8 @@ class Persistence:
         item: str = "Item",
     ) -> None:
         cr: sa.engine.CursorResult = await self.engine_connection.execute(statement)
+
+        await self.engine_connection.commit()
 
         if cr.rowcount > 0:
             return None
