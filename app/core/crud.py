@@ -15,20 +15,20 @@ class CRUDModel:
     ) -> None:
         self.engine_connection = engine_connection
 
-    @contextlib.contextmanager
-    def transaction_begin(self) -> typing.Generator:
+    @contextlib.asynccontextmanager
+    async def transaction_begin(self) -> typing.Generator:
         # Prevent transaction nesting
         # Will be removed in SQLAlchemy 2.0
         if self.engine_connection.in_transaction():
             # BEGIN (implicit) by PostgreSQL
             yield self.engine_connection
         else:
-            self.engine_connection.begin()
+            await self.engine_connection.begin()
 
             try:
                 yield self.engine_connection
             finally:
-                self.engine_connection.close()
+                await self.engine_connection.close()
 
     async def get_one(
         self,
@@ -60,7 +60,7 @@ class CRUDModel:
         self,
         statement,
     ) -> int:
-        with self.transaction_begin():
+        async with self.transaction_begin():
             cr: sa.engine.CursorResult = await self.engine_connection.execute(statement)
             await self.engine_connection.commit()
 
@@ -85,7 +85,7 @@ class CRUDModel:
         model_new = model.copy(update=dict_in)
 
         # 4. Execute upate query
-        with self.transaction_begin():
+        async with self.transaction_begin():
             await self.engine_connection.execute(statement.values(**model_new.dict()))
             await self.engine_connection.commit()
 
@@ -96,7 +96,7 @@ class CRUDModel:
         statement,
         item: str = "Item",
     ) -> None:
-        with self.transaction_begin():
+        async with self.transaction_begin():
             cr: sa.engine.CursorResult = await self.engine_connection.execute(statement)
             await self.engine_connection.commit()
 

@@ -49,6 +49,7 @@ def upgrade() -> None:
         sa.Column(
             "created",
             sa.types.TIMESTAMP(timezone=True),
+            index=True,
         ),
     )
 
