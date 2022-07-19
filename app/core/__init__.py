@@ -1,5 +1,5 @@
 from . import config as config
-from . import crud as crud
+from . import persistence as persistence
 from . import database as database
 from . import dependencies as dependencies
 from . import exceptions as exceptions
