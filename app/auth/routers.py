@@ -5,8 +5,8 @@ import fastapi
 import sqlalchemy as sa
 from core import exceptions
 from core.config import settings
-from core.crud import CRUDModel
 from core.dependencies import engine_connect
+from core.persistence import Persistence
 from core.utils import list_params
 from fastapi.param_functions import Form
 from jose import JWTError, jwt
@@ -159,7 +159,7 @@ async def get_refresh_token(
 
     stmt = models.tokens.insert().values(**token_dict)
     try:
-        await CRUDModel(conn).insert(stmt)
+        await Persistence(conn).insert(stmt)
     except sa.exc.IntegrityError:
         raise exceptions.conflict_exception()
 
@@ -199,7 +199,7 @@ async def list_users(
 
     stmt = stmt.offset(params["skip"]).limit(params["take"])
 
-    return await CRUDModel(conn).get_all(stmt)
+    return await Persistence(conn).get_all(stmt)
 
 
 @router.get(
@@ -217,7 +217,7 @@ async def get_user(
         raise exceptions.forbidden_exception()
 
     stmt = sa.select(models.users).where(models.users.c.id == user_id)
-    return await CRUDModel(conn).get_one_or_404(stmt, schemas.User.Config().title)
+    return await Persistence(conn).get_one_or_404(stmt, schemas.User.Config().title)
 
 
 @router.post(
@@ -250,7 +250,7 @@ async def create_user(
     try:
         return schemas.User(
             **user_dict,
-            id=await CRUDModel(conn).insert(stmt),
+            id=await Persistence(conn).insert(stmt),
         )
     except sa.exc.IntegrityError:
         raise exceptions.conflict_exception()
@@ -279,7 +279,7 @@ async def update_user(
     stmt = sa.update(models.users).where(models.users.c.id == user_id)
 
     try:
-        user_model = await CRUDModel(conn).update_or_failure(
+        user_model = await Persistence(conn).update_or_failure(
             stmt,
             user_dict,
             schemas.User,
@@ -303,7 +303,7 @@ async def delete_user(
         raise exceptions.forbidden_exception()
 
     stmt = models.users.delete().where(models.users.c.id == user_id)
-    await CRUDModel(conn).delete_one_or_404(stmt, "User")
+    await Persistence(conn).delete_one_or_404(stmt, "User")
 
 
 @router.get(
@@ -330,7 +330,7 @@ async def list_groups_of_user(
     )
     stmt = stmt.offset(params["skip"]).limit(params["take"])
 
-    return await CRUDModel(conn).get_all(stmt)
+    return await Persistence(conn).get_all(stmt)
 
 
 @router.get(
@@ -365,7 +365,7 @@ async def list_permissions_of_user(
     )
     stmt = stmt.offset(params["skip"]).limit(params["take"])
 
-    return await CRUDModel(conn).get_all(stmt)
+    return await Persistence(conn).get_all(stmt)
 
 
 @router.get(
@@ -392,7 +392,7 @@ async def list_content_types(
 
     stmt = stmt.offset(params["skip"]).limit(params["take"])
 
-    return await CRUDModel(conn).get_all(stmt)
+    return await Persistence(conn).get_all(stmt)
 
 
 @router.get(
@@ -412,7 +412,7 @@ async def get_content_type(
         models.content_types.c.id == content_type_id
     )
 
-    return await CRUDModel(conn).get_one_or_404(
+    return await Persistence(conn).get_one_or_404(
         stmt, schemas.ContentType.Config().title
     )
 
@@ -436,7 +436,7 @@ async def create_content_type(
     try:
         return schemas.ContentType(
             **content_type_dict,
-            id=await CRUDModel(conn).insert(stmt),
+            id=await Persistence(conn).insert(stmt),
         )
     except sa.exc.IntegrityError:
         raise exceptions.conflict_exception()
@@ -466,7 +466,7 @@ async def update_content_type(
     )
 
     try:
-        content_type_model = await CRUDModel(conn).update_or_failure(
+        content_type_model = await Persistence(conn).update_or_failure(
             stmt,
             content_type_dict,
             schemas.ContentType,
@@ -492,7 +492,7 @@ async def delete_content_type(
     stmt = models.content_types.delete().where(
         models.content_types.c.id == content_type_id
     )
-    await CRUDModel(conn).delete_one_or_404(stmt, "Content Type")
+    await Persistence(conn).delete_one_or_404(stmt, "Content Type")
 
 
 @router.get(
@@ -523,7 +523,7 @@ async def list_permissions_of_content_type(
     )
     stmt = stmt.offset(params["skip"]).limit(params["take"])
 
-    return await CRUDModel(conn).get_all(stmt)
+    return await Persistence(conn).get_all(stmt)
 
 
 @router.post(
@@ -550,7 +550,7 @@ async def create_permission_of_content_type(
     try:
         return schemas.Permission(
             **permission_dict,
-            id=await CRUDModel(conn).insert(stmt),
+            id=await Persistence(conn).insert(stmt),
         )
     except sa.exc.IntegrityError:
         raise exceptions.conflict_exception()
@@ -582,7 +582,7 @@ async def update_permission_of_content_type(
     stmt = sa.update(models.permissions).where(models.permissions.c.id == permission_id)
 
     try:
-        permission_model = await CRUDModel(conn).update_or_failure(
+        permission_model = await Persistence(conn).update_or_failure(
             stmt,
             permission_dict,
             schemas.Permission,
@@ -610,7 +610,7 @@ async def delete_permission_of_content_type(
         models.permissions.c.id == permission_id,
         models.permissions.c.content_type_id == content_type_id,
     )
-    await CRUDModel(conn).delete_one_or_404(stmt, "Permission")
+    await Persistence(conn).delete_one_or_404(stmt, "Permission")
 
 
 @router.get(
@@ -627,7 +627,7 @@ async def list_groups(
         raise exceptions.forbidden_exception()
 
     stmt = sa.select(models.groups).offset(params["skip"]).limit(params["take"])
-    return await CRUDModel(conn).get_all(stmt)
+    return await Persistence(conn).get_all(stmt)
 
 
 @router.get(
@@ -644,7 +644,7 @@ async def get_group(
         raise exceptions.forbidden_exception()
 
     stmt = sa.select(models.groups).where(models.groups.c.id == group_id)
-    return await CRUDModel(conn).get_one_or_404(stmt, schemas.Group.Config().title)
+    return await Persistence(conn).get_one_or_404(stmt, schemas.Group.Config().title)
 
 
 @router.post(
@@ -665,7 +665,7 @@ async def create_group(
     try:
         return schemas.Group(
             **group_dict,
-            id=await CRUDModel(conn).insert(stmt),
+            id=await Persistence(conn).insert(stmt),
         )
     except sa.exc.IntegrityError:
         raise exceptions.conflict_exception()
@@ -693,7 +693,7 @@ async def update_group(
     stmt = sa.update(models.groups).where(models.groups.c.id == group_id)
 
     try:
-        group_model = await CRUDModel(conn).update_or_failure(
+        group_model = await Persistence(conn).update_or_failure(
             stmt,
             group_dict,
             schemas.Group,
@@ -717,7 +717,7 @@ async def delete_group(
         raise exceptions.forbidden_exception()
 
     stmt = models.groups.delete().where(models.groups.c.id == group_id)
-    await CRUDModel(conn).delete_one_or_404(stmt, "Group")
+    await Persistence(conn).delete_one_or_404(stmt, "Group")
 
 
 @router.get(
@@ -745,7 +745,7 @@ async def list_users_of_group(
     )
     stmt = stmt.offset(params["skip"]).limit(params["take"])
 
-    return await CRUDModel(conn).get_all(stmt)
+    return await Persistence(conn).get_all(stmt)
 
 
 @router.get(
@@ -780,7 +780,7 @@ async def list_permissions_of_group(
     )
     stmt = stmt.offset(params["skip"]).limit(params["take"])
 
-    return await CRUDModel(conn).get_all(stmt)
+    return await Persistence(conn).get_all(stmt)
 
 
 @router.post(
@@ -807,7 +807,7 @@ async def create_user_of_group(
     try:
         return schemas.UserGroup(
             **user_group_dict,
-            id=await CRUDModel(conn).insert(stmt),
+            id=await Persistence(conn).insert(stmt),
         )
     except sa.exc.IntegrityError:
         raise exceptions.conflict_exception()
@@ -831,7 +831,7 @@ async def delete_user_of_group(
         models.user_groups.c.user_id == user_id,
         models.user_groups.c.group_id == group_id,
     )
-    await CRUDModel(conn).delete_one_or_404(stmt, "User Group")
+    await Persistence(conn).delete_one_or_404(stmt, "User Group")
 
 
 @router.get(
@@ -857,7 +857,7 @@ async def list_permissions(
     )
     stmt = stmt.offset(params["skip"]).limit(params["take"])
 
-    return await CRUDModel(conn).get_all(stmt)
+    return await Persistence(conn).get_all(stmt)
 
 
 @router.get(
@@ -886,7 +886,9 @@ async def get_permission(
         .where(models.permissions.c.id == permission_id)
     )
 
-    return await CRUDModel(conn).get_one_or_404(stmt, schemas.Permission.Config().title)
+    return await Persistence(conn).get_one_or_404(
+        stmt, schemas.Permission.Config().title
+    )
 
 
 @router.get(
@@ -913,7 +915,7 @@ async def list_users_of_permission(
         .where(models.user_permissions.c.permission_id == permission_id)
     )
     stmt = stmt.offset(params["skip"]).limit(params["take"])
-    return await CRUDModel(conn).get_all(stmt)
+    return await Persistence(conn).get_all(stmt)
 
 
 @router.get(
@@ -940,7 +942,7 @@ async def list_groups_of_permission(
     )
     stmt = stmt.offset(params["skip"]).limit(params["take"])
 
-    return await CRUDModel(conn).get_all(stmt)
+    return await Persistence(conn).get_all(stmt)
 
 
 @router.post(
@@ -967,7 +969,7 @@ async def create_permission_of_user(
     try:
         return schemas.UserPermission(
             **user_permission_dict,
-            id=await CRUDModel(conn).insert(stmt),
+            id=await Persistence(conn).insert(stmt),
         )
     except sa.exc.IntegrityError:
         raise exceptions.conflict_exception()
@@ -991,7 +993,7 @@ async def delete_permission_of_user(
         models.user_permissions.c.user_id == user_id,
         models.user_permissions.c.permission_id == permission_id,
     )
-    await CRUDModel(conn).delete_one_or_404(stmt, "User Permission")
+    await Persistence(conn).delete_one_or_404(stmt, "User Permission")
 
 
 @router.post(
@@ -1018,7 +1020,7 @@ async def create_permission_of_group(
     try:
         return schemas.GroupPermission(
             **group_permission_dict,
-            id=await CRUDModel(conn).insert(stmt),
+            id=await Persistence(conn).insert(stmt),
         )
     except sa.exc.IntegrityError:
         raise exceptions.conflict_exception()
@@ -1042,7 +1044,7 @@ async def delete_permission_of_group(
         models.group_permissions.c.group_id == group_id,
         models.group_permissions.c.permission_id == permission_id,
     )
-    await CRUDModel(conn).delete_one_or_404(stmt, "Group Permission")
+    await Persistence(conn).delete_one_or_404(stmt, "Group Permission")
 
 
 @router.get(
@@ -1069,4 +1071,4 @@ async def list_content_types_of_permission(
     )
     stmt = stmt.offset(params["skip"]).limit(params["take"])
 
-    return await CRUDModel(conn).get_all(stmt)
+    return await Persistence(conn).get_all(stmt)

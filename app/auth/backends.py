@@ -8,8 +8,8 @@ import fastapi
 import sqlalchemy as sa
 from core import exceptions
 from core.config import settings
-from core.crud import CRUDModel
 from core.dependencies import engine_connect
+from core.persistence import Persistence
 from jose import JWTError, jwt
 
 from . import hashers, models
@@ -90,7 +90,7 @@ class AuthenticationBackend(BaseAuthenticationBackend):
             models.users.c.is_active == True,
         )
 
-        user_row = await CRUDModel(conn).get_one(stmt)
+        user_row = await Persistence(conn).get_one(stmt)
 
         if not user_row:
             return False
@@ -178,7 +178,7 @@ class AuthenticationBackend(BaseAuthenticationBackend):
             )
         )
 
-        return await CRUDModel(conn).get_all(stmt)
+        return await Persistence(conn).get_all(stmt)
 
     async def get_group_permissions(
         self,
@@ -218,7 +218,7 @@ class AuthenticationBackend(BaseAuthenticationBackend):
             )
         )
 
-        return await CRUDModel(conn).get_all(stmt)
+        return await Persistence(conn).get_all(stmt)
 
     async def get_all_permissions(
         self,
@@ -288,7 +288,7 @@ class AuthenticationBackend(BaseAuthenticationBackend):
 
         stmt = sa.union(stmt1, stmt2)
 
-        return await CRUDModel(conn).get_all(stmt)
+        return await Persistence(conn).get_all(stmt)
 
     async def has_perm(
         self,
@@ -332,7 +332,7 @@ class AuthenticationBackend(BaseAuthenticationBackend):
         if not include_superusers:
             stmt = stmt.where(models.users.c.is_superuser == False)
 
-        return await CRUDModel(conn).get_all(stmt)
+        return await Persistence(conn).get_all(stmt)
 
 
 @lru_cache(maxsize=1)
@@ -356,7 +356,7 @@ async def get_superuser(
         models.users.c.is_superuser == True,
     )
 
-    row = await CRUDModel(conn).get_one(stmt)
+    row = await Persistence(conn).get_one(stmt)
 
     return row._mapping if row else None
 

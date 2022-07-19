@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio.engine import AsyncConnection
 from . import exceptions
 
 
-class CRUDModel:
+class Persistence:
     def __init__(
         self,
         engine_connection: AsyncConnection,
@@ -19,6 +19,11 @@ class CRUDModel:
     async def transaction_begin(self) -> typing.Generator:
         # Prevent transaction nesting
         # Will be removed in SQLAlchemy 2.0
+        #
+        # Example:
+        # async with self.transaction_begin():
+        #    await self.engine_connection.execute(statement)
+        #    await self.engine_connection.commit()
         if self.engine_connection.in_transaction():
             # BEGIN (implicit) by PostgreSQL
             yield self.engine_connection
@@ -35,6 +40,7 @@ class CRUDModel:
         statement,
     ) -> typing.Any:
         cr: sa.engine.CursorResult = await self.engine_connection.execute(statement)
+
         return cr.first()
 
     async def get_one_or_404(
@@ -54,15 +60,14 @@ class CRUDModel:
         statement,
     ) -> list[typing.Any]:
         cr: sa.engine.CursorResult = await self.engine_connection.execute(statement)
+
         return cr.fetchall()
 
     async def insert(
         self,
         statement,
     ) -> int:
-        async with self.transaction_begin():
-            cr: sa.engine.CursorResult = await self.engine_connection.execute(statement)
-            await self.engine_connection.commit()
+        cr: sa.engine.CursorResult = await self.engine_connection.execute(statement)
 
         return cr.inserted_primary_key[0]
 
@@ -74,7 +79,7 @@ class CRUDModel:
     ) -> typing.Any:
         # 1. Fetch saved row from database
         stmt = sa.select(statement.table).where(statement.whereclause)
-        row = await CRUDModel(self.engine_connection).get_one_or_404(
+        row = await Persistence(self.engine_connection).get_one_or_404(
             stmt, model_out.Config().title
         )
 
@@ -85,9 +90,7 @@ class CRUDModel:
         model_new = model.copy(update=dict_in)
 
         # 4. Execute upate query
-        async with self.transaction_begin():
-            await self.engine_connection.execute(statement.values(**model_new.dict()))
-            await self.engine_connection.commit()
+        await self.engine_connection.execute(statement.values(**model_new.dict()))
 
         return model_new
 
@@ -96,9 +99,7 @@ class CRUDModel:
         statement,
         item: str = "Item",
     ) -> None:
-        async with self.transaction_begin():
-            cr: sa.engine.CursorResult = await self.engine_connection.execute(statement)
-            await self.engine_connection.commit()
+        cr: sa.engine.CursorResult = await self.engine_connection.execute(statement)
 
         if cr.rowcount > 0:
             return None
