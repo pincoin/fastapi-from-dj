@@ -22,6 +22,8 @@ class Settings(BaseSettings):
 
     sqlalchemy_database_uri: PostgresDsn
 
+    log_file: str = "fastapi.log"
+
     class Config:
         env_file_encoding = "utf-8"
         env_nested_delimiter = "__"

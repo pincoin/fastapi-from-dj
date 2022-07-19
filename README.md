@@ -39,6 +39,7 @@ jwt_algorithm="HS256"
 password_hasher="auth.hashers.Pbkdf2Sha256Hasher"
 authentication_backend="auth.backends.AuthenticationBackend"
 sqlalchemy_database_uri="postgresql+asyncpg://username:password@host:port/database"
+log_file="/path/to/logs/fastapi.log"
 ```
 
 You may create the `app/production.env` separate file for the production server, and you can run server by setting environment variable `ENV_STATE=production`.
@@ -94,6 +95,14 @@ You can specify the `env` file by setting environment variable:
 ```
 $ cd app/
 $ ENV=local python main.py
+```
+
+## Logging
+```py
+from core.utils import get_logger
+
+logger = get_logger(__name__)
+logger.debug("log message")
 ```
 
 # Django or FastAPI
