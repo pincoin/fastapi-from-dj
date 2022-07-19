@@ -8,32 +8,34 @@ from sqlalchemy.ext.asyncio.engine import AsyncConnection
 from . import exceptions
 
 
+@contextlib.asynccontextmanager
+async def start_transaction(engine_connection: AsyncConnection) -> typing.Generator:
+    # Prevent transaction nesting
+    # Will be removed in SQLAlchemy 2.0
+    #
+    # Example:
+    # async with start_transaction(engine_connection):
+    #    await engine_connection.execute(stmt1)
+    #    await engine_connection.execute(stmt2)
+    #    await engine_connection.commit()
+    if engine_connection.in_transaction():
+        # BEGIN (implicit) by PostgreSQL
+        yield engine_connection
+    else:
+        await engine_connection.begin()
+
+        try:
+            yield engine_connection
+        finally:
+            await engine_connection.close()
+
+
 class Persistence:
     def __init__(
         self,
         engine_connection: AsyncConnection,
     ) -> None:
         self.engine_connection = engine_connection
-
-    @contextlib.asynccontextmanager
-    async def transaction_begin(self) -> typing.Generator:
-        # Prevent transaction nesting
-        # Will be removed in SQLAlchemy 2.0
-        #
-        # Example:
-        # async with self.transaction_begin():
-        #    await self.engine_connection.execute(statement)
-        #    await self.engine_connection.commit()
-        if self.engine_connection.in_transaction():
-            # BEGIN (implicit) by PostgreSQL
-            yield self.engine_connection
-        else:
-            await self.engine_connection.begin()
-
-            try:
-                yield self.engine_connection
-            finally:
-                await self.engine_connection.close()
 
     async def get_one(
         self,
