@@ -3,7 +3,6 @@ import datetime
 import importlib
 import typing
 from functools import lru_cache
-from webbrowser import get
 
 import fastapi
 import sqlalchemy as sa
@@ -16,7 +15,7 @@ from jose import JWTError, jwt
 
 from . import hashers, models
 
-logger = get_logger(__name__)
+logger = get_logger()
 
 oauth2_scheme = fastapi.security.OAuth2PasswordBearer(tokenUrl="/auth/token")
 
@@ -67,10 +66,16 @@ class AuthenticationBackend(BaseAuthenticationBackend):
                 algorithms=[settings.jwt_algorithm],
             )
 
-            if (
-                datetime.datetime.fromtimestamp(payload["exp"])
-                < datetime.datetime.now()
-            ):
+            logger.info(
+                datetime.datetime.fromtimestamp(
+                    payload["exp"], tz=datetime.timezone.utc
+                )
+            )
+            logger.info(datetime.datetime.now(tz=datetime.timezone.utc))
+
+            if datetime.datetime.fromtimestamp(
+                payload["exp"], tz=datetime.timezone.utc
+            ) < datetime.datetime.now(tz=datetime.timezone.utc):
                 raise exceptions.invalid_token_exception()
 
             username: str = payload.get("sub")

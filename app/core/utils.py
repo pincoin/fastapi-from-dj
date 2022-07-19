@@ -13,7 +13,8 @@ async def list_params(
     return {"q": q, "skip": skip, "take": take}
 
 
-def get_logger(name, level=logging.DEBUG):
+def get_logger():
+    logger = logging.getLogger()
     handler = logging.FileHandler(settings.log_file)
     handler.setFormatter(
         logging.Formatter(
@@ -21,9 +22,7 @@ def get_logger(name, level=logging.DEBUG):
             datefmt="%Y-%m-%d %H:%M:%S",
         ),
     )
-
-    logger = logging.getLogger(name)
-    logger.setLevel(level)
+    logger.setLevel(logging.WARNING)
     logger.addHandler(handler)
 
     return logger

@@ -14,7 +14,7 @@ from jose import JWTError, jwt
 from . import hashers, models, schemas
 from .backends import authentication
 
-logger = get_logger(__name__)
+logger = get_logger()
 
 router = fastapi.APIRouter(
     prefix="/auth",
@@ -97,10 +97,17 @@ async def get_access_token(
                 algorithms=[settings.jwt_algorithm],
             )
 
-            if (
-                datetime.datetime.fromtimestamp(payload["exp"])
-                < datetime.datetime.now()
-            ):
+            logger.info(
+                datetime.datetime.fromtimestamp(
+                    payload["exp"], tz=datetime.timezone.utc
+                )
+            )
+            logger.info(datetime.datetime.now(tz=datetime.timezone.utc))
+
+            if datetime.datetime.fromtimestamp(
+                payload["exp"], tz=datetime.timezone.utc
+            ) < datetime.datetime.now(tz=datetime.timezone.utc):
+
                 raise exceptions.invalid_token_exception()
 
             username: str = payload.get("sub")
@@ -156,7 +163,7 @@ async def get_refresh_token(
         "user_id": user["id"],
         "token": refresh_token,
         "expiration_time_delta": refresh_token_expires,
-        "created": datetime.datetime.utcnow(),
+        "created": datetime.datetime.now(),
     }
 
     stmt = models.tokens.insert().values(**token_dict)
@@ -243,7 +250,7 @@ async def create_user(
         "is_active": True,
         "is_staff": False,
         "is_superuser": False,
-        "date_joined": datetime.datetime.utcnow(),
+        "date_joined": datetime.datetime.now(),
         "last_login": None,
     }
 
