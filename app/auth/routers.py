@@ -129,12 +129,14 @@ async def get_access_token(
 
 
 @router.post(
-    "/refresh",
+    "/refresh/",
+    status_code=fastapi.status.HTTP_200_OK,
     response_model=schemas.RefreshToken,
 )
 async def get_refresh_token(
     response: fastapi.Response,
     user: dict = fastapi.Depends(authentication.get_current_user),
+    conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ) -> dict:
     if user is None:
         raise exceptions.forbidden_exception()
@@ -147,6 +149,19 @@ async def get_refresh_token(
         user["id"],
         expires_delta=refresh_token_expires,
     )
+
+    token_dict = {
+        "user_id": user["id"],
+        "token": refresh_token,
+        "expiration_time_delta": refresh_token_expires,
+        "created": datetime.datetime.utcnow(),
+    }
+
+    stmt = models.tokens.insert().values(**token_dict)
+    try:
+        await CRUDModel(conn).insert(stmt)
+    except sa.exc.IntegrityError:
+        raise exceptions.conflict_exception()
 
     response.headers["cache-control"] = "no-store"
 

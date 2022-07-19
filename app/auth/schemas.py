@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime
 
 from pydantic import BaseModel, EmailStr, Field
 
@@ -31,8 +31,8 @@ class User(BaseModel):
     is_active: bool | None = False
     is_staff: bool | None = False
     is_superuser: bool | None = False
-    last_login: datetime | None = None
-    date_joined: datetime
+    last_login: datetime.datetime | None = None
+    date_joined: datetime.datetime
 
     class Config:
         title = "User"
@@ -122,3 +122,11 @@ class GroupPermission(BaseModel):
 class RefreshToken(BaseModel):
     refresh_token: str
     token_type: str
+
+
+class Token(BaseModel):
+    id: int | None
+    user_id: int
+    token: str
+    expiration_time_delta: datetime.timedelta
+    created: datetime.datetime

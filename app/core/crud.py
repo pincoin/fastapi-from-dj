@@ -19,14 +19,16 @@ class CRUDModel:
     def transaction_begin(self) -> typing.Generator:
         # Prevent transaction nesting
         # Will be removed in SQLAlchemy 2.0
-        if not self.engine_connection.in_transaction():
-            with self.engine_connection.begin():
-                yield self.engine_connection
-        else:
-            """
-            BEGIN (implicit) by PostgreSQL
-            """
+        if self.engine_connection.in_transaction():
+            # BEGIN (implicit) by PostgreSQL
             yield self.engine_connection
+        else:
+            self.engine_connection.begin()
+
+            try:
+                yield self.engine_connection
+            finally:
+                self.engine_connection.close()
 
     async def get_one(
         self,

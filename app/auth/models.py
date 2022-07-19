@@ -368,12 +368,16 @@ tokens = sa.Table(
         index=True,
     ),
     sa.Column(
-        "refresh_token",
-        sa.String,
+        "token",
+        sa.String(255),
+        index=True,
     ),
     sa.Column(
-        "expire_date",
+        "expiration_time_delta",
+        sa.Interval,
+    ),
+    sa.Column(
+        "created",
         sa.types.TIMESTAMP(timezone=True),
-        index=True,
     ),
 )
