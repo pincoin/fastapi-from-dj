@@ -4,18 +4,31 @@ from fastapi import FastAPI
 import auth
 import home
 from core.config import settings
+from core.utils import get_logger
 
-app = FastAPI()
+logger = get_logger()
+
+
+app_params = {}
+
+if settings.disable_swagger_ui:
+    app_params["docs_url"] = None
+
+if settings.disable_openapi_json:
+    app_params["openapi_url"] = None
+
+
+app = FastAPI(**app_params)
 
 
 @app.on_event("startup")
 async def startup():
-    print("on startup")
+    logger.info("on startup")
 
 
 @app.on_event("shutdown")
 async def shutdown():
-    print("on shutdown")
+    logger.info("on shutdown")
 
 
 app.include_router(auth.routers.router)

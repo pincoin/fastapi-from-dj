@@ -12,6 +12,9 @@ class Settings(BaseSettings):
     host: str = "127.0.0.1"
     port: int = 8000
 
+    disable_swagger_ui: bool = False
+    disable_openapi_json: bool = False
+
     jwt_secret_key: str = Field(min_length=32)
     jwt_expiration_delta: int = 30
     jwt_refresh_secret_key: str = Field(min_length=32)
