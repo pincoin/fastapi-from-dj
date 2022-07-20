@@ -15,14 +15,21 @@ async def list_params(
 
 def get_logger():
     logger = logging.getLogger()
-    handler = logging.FileHandler(settings.log_file)
-    handler.setFormatter(
-        logging.Formatter(
-            "%(asctime)s %(levelname)s: [%(name)s] %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S",
-        ),
-    )
-    logger.setLevel(logging.WARNING)
-    logger.addHandler(handler)
+
+    if not logger.handlers:
+        if settings.debug:
+            logger.setLevel(logging.DEBUG)
+        else:
+            logger.setLevel(logging.WARNING)
+
+        handler = logging.FileHandler(settings.log_file)
+        handler.setFormatter(
+            logging.Formatter(
+                "%(asctime)s %(levelname)s: [%(name)s] %(message)s",
+                datefmt="%Y-%m-%d %H:%M:%S",
+            ),
+        )
+
+        logger.addHandler(handler)
 
     return logger
