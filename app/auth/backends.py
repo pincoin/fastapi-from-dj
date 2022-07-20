@@ -99,7 +99,7 @@ class AuthenticationBackend(BaseAuthenticationBackend):
             models.users.c.is_active == True,
         )
 
-        user_row = await Persistence(conn).get_one(stmt)
+        user_row = await Persistence(conn).get_one_or_none(stmt)
 
         if not user_row:
             return False
@@ -363,7 +363,7 @@ async def get_superuser(
         models.users.c.is_superuser == True,
     )
 
-    row = await Persistence(conn).get_one(stmt)
+    row = await Persistence(conn).get_one_or_none(stmt)
 
     return row._mapping if row else None
 

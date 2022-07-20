@@ -37,7 +37,7 @@ class Persistence:
     ) -> None:
         self.engine_connection = engine_connection
 
-    async def get_one(
+    async def get_one_or_none(
         self,
         statement,
     ) -> typing.Any:

@@ -118,7 +118,7 @@ async def get_access_token(
                 )
             )
 
-            if (token_row := await Persistence(conn).get_one(stmt)) is None:
+            if (token_row := await Persistence(conn).get_one_or_none(stmt)) is None:
                 raise exceptions.invalid_token_exception()
 
             token_dict = token_row._mapping
