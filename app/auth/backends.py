@@ -136,7 +136,6 @@ class AuthenticationBackend(BaseAuthenticationBackend):
 
     def create_refresh_token(
         self,
-        username: str,
         user_id: int,
         expires_delta: datetime.timedelta | None,
     ) -> typing.Any:
@@ -146,7 +145,6 @@ class AuthenticationBackend(BaseAuthenticationBackend):
             expire = datetime.datetime.utcnow() + datetime.timedelta(days=14)
 
         payload = {
-            "sub": username,
             "id": user_id,
             "exp": expire,
         }

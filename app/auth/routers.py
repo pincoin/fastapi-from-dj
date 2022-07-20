@@ -76,7 +76,6 @@ async def get_access_token(
             minutes=settings.jwt_refresh_expiration_delta,
         )
         refresh_token = authentication.create_refresh_token(
-            user_dict["username"],
             user_dict["id"],
             expires_delta=refresh_token_expires,
         )
@@ -97,30 +96,41 @@ async def get_access_token(
                 algorithms=[settings.jwt_algorithm],
             )
 
-            logger.info(
-                datetime.datetime.fromtimestamp(
-                    payload["exp"], tz=datetime.timezone.utc
-                )
-            )
-            logger.info(datetime.datetime.now(tz=datetime.timezone.utc))
-
             if datetime.datetime.fromtimestamp(
                 payload["exp"], tz=datetime.timezone.utc
             ) < datetime.datetime.now(tz=datetime.timezone.utc):
-
                 raise exceptions.invalid_token_exception()
 
-            username: str = payload.get("sub")
             user_id: int = payload.get("id")
 
-            if username is None or user_id is None:
+            stmt = (
+                sa.select(
+                    models.tokens,
+                    models.users.c.username,
+                )
+                .join_from(
+                    models.tokens,
+                    models.users,
+                )
+                .where(
+                    models.tokens.c.user_id == user_id,
+                    models.users.c.is_active == True,
+                )
+            )
+
+            if (token_row := await Persistence(conn).get_one(stmt)) is None:
+                raise exceptions.invalid_token_exception()
+
+            token_dict = token_row._mapping
+
+            if token_dict["username"] is None or user_id is None:
                 raise exceptions.invalid_token_exception()
 
             access_token_expires = datetime.timedelta(
                 minutes=settings.jwt_expiration_delta,
             )
             access_token = authentication.create_access_token(
-                username,
+                token_dict["username"],
                 user_id,
                 expires_delta=access_token_expires,
             )
@@ -154,7 +164,6 @@ async def get_refresh_token(
         minutes=settings.jwt_refresh_expiration_delta,
     )
     refresh_token = authentication.create_refresh_token(
-        user["username"],
         user["id"],
         expires_delta=refresh_token_expires,
     )
