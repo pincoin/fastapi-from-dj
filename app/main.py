@@ -17,6 +17,7 @@ if settings.disable_swagger_ui:
 if settings.disable_openapi_json:
     app_params["openapi_url"] = None
 
+logger.debug(app_params)
 
 app = FastAPI(**app_params)
 

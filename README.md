@@ -31,7 +31,7 @@ Python 3.10 and above
 app_name="FastAPI from Django"
 debug=True
 uvicorn_reload=True
-disable_swagger_ui=False
+disable_swagger_ui=True
 disable_openapi_json=False
 jwt_secret_key="Minimum-length-32-secret-key-string-for-HS256"
 jwt_expiration_delta=30
