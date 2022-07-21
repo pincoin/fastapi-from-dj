@@ -107,6 +107,15 @@ logger = get_logger(__name__)
 logger.debug("log message")
 ```
 
+# Deployment
+
+1. Create directories: `ssl`, `logs`, `run`
+2. Create virtual env: `venv`
+3. Install pip packages
+4. Create `local.env`
+5. `/etc/nginx/sites-available/example.com`
+6. `/etc/systemd/system/gunicorn.service`
+
 # Django or FastAPI
 I decided to run both Django and FastAPI servers because of the following reasons:
 
