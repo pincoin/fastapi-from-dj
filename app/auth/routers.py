@@ -148,7 +148,7 @@ async def get_access_token(
 
 
 @router.post(
-    "/refresh/",
+    "/refresh",
     status_code=fastapi.status.HTTP_200_OK,
     response_model=schemas.RefreshToken,
 )
@@ -157,9 +157,11 @@ async def get_refresh_token(
     user: dict = fastapi.Depends(authentication.get_current_user),
     conn: sa.ext.asyncio.engine.AsyncConnection = fastapi.Depends(engine_connect),
 ) -> dict:
+    logger.debug("get refresh token")
     if user is None:
         raise exceptions.forbidden_exception()
 
+    logger.debug(user)
     refresh_token_expires = datetime.timedelta(
         minutes=settings.jwt_refresh_expiration_delta,
     )
@@ -168,12 +170,16 @@ async def get_refresh_token(
         expires_delta=refresh_token_expires,
     )
 
+    logger.debug(refresh_token)
+
     token_dict = {
         "user_id": user["id"],
         "token": refresh_token,
         "expiration_time_delta": refresh_token_expires,
         "created": datetime.datetime.now(),
     }
+
+    logger.debug(token_dict)
 
     stmt = models.tokens.insert().values(**token_dict)
     try:

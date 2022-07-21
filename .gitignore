@@ -240,3 +240,6 @@ fabric.properties
 app/production.env
 app/local.env
 alembic.ini
+ssl/
+logs/
+run/
